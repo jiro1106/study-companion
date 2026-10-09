@@ -181,6 +181,10 @@ class PlannerRequest(BaseModel):
 # Routes
 # ---------------------------------------------------------------------------
 
+@app.get("/health")
+def health_check():
+    return {"status": " hGET GET AW"}
+
 
 @app.get("/api/health")
 async def health() -> dict:
