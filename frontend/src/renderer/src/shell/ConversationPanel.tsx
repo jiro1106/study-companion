@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react'
 import { MessageCircle, X } from 'lucide-react'
 
 import ChatPanel from '../components/floating/ChatPanel'
 import { useSharedChat } from '../components/floating/useSharedChat'
 import '../components/floating/FloatingAssistant.css'
 import { ICON } from '../ui/icon'
+import { chatWidthForPointer, clampChatWidth } from './conversation-panel'
 
 /**
  * Expanding conversation drawer on the right of the main window. It uses the same
@@ -11,6 +13,38 @@ import { ICON } from '../ui/icon'
  */
 export function ConversationPanel({ open, onToggle }: { open: boolean; onToggle: () => void }): React.JSX.Element {
   const { messages, isLoading, send, edit } = useSharedChat()
+  const [width, setWidth] = useState(() => {
+    try {
+      const savedWidth = Number(localStorage.getItem('bardy:chat-w'))
+      return clampChatWidth(Number.isFinite(savedWidth) ? savedWidth : 380, window.innerWidth)
+    } catch {
+      return 380
+    }
+  })
+  const [dragging, setDragging] = useState(false)
+
+  useEffect(() => {
+    if (!open) setWidth(clampChatWidth(380, window.innerWidth))
+  }, [open])
+
+  const startDrag = (event: React.PointerEvent<HTMLDivElement>): void => {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setDragging(true)
+  }
+  const resize = (event: React.PointerEvent<HTMLDivElement>): void => {
+    if (dragging) setWidth(chatWidthForPointer(event.clientX, window.innerWidth))
+  }
+  const endDrag = (event: React.PointerEvent<HTMLDivElement>): void => {
+    if (!dragging) return
+    const nextWidth = chatWidthForPointer(event.clientX, window.innerWidth)
+    setDragging(false)
+    setWidth(nextWidth)
+    try {
+      localStorage.setItem('bardy:chat-w', String(nextWidth))
+    } catch {
+      // preference just isn't remembered
+    }
+  }
 
   return (
     <>
@@ -30,9 +64,22 @@ export function ConversationPanel({ open, onToggle }: { open: boolean; onToggle:
         aria-label="Bardy conversation"
         aria-hidden={!open}
         inert={!open}
-        className={`shrink-0 overflow-hidden transition-[width] duration-200 ease-out ${open ? 'w-[min(380px,45vw)] border-l-2 border-border' : 'w-0'}`}
+        style={{ width: open ? width : 0, transition: dragging ? 'none' : 'width 200ms ease-out' }}
+        className={`relative shrink-0 ${open ? 'overflow-visible border-l-2 border-border' : 'overflow-hidden'}`}
       >
-        <div className="flex h-full w-[min(380px,45vw)] flex-col bg-[#132025]">
+        {open && (
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize chat panel"
+            onPointerDown={startDrag}
+            onPointerMove={resize}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            className="absolute inset-y-0 -left-1 z-10 w-2 cursor-col-resize hover:bg-link/40 active:bg-link/60"
+          />
+        )}
+        <div style={{ width }} className="flex h-full flex-col overflow-hidden bg-[#132025]">
           <div className="flex items-center justify-between gap-2 border-b border-[rgba(165,237,110,0.1)] bg-[#192a30] px-4 py-3">
             <b className="font-display text-[15px] font-black text-[#f1f5f9]">Bardy</b>
             <button
