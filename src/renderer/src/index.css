@@ -1,1 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
+/* ── BARDHIE Color & Typography Tokens ─────────────────── */
+
+:root {
+  --color-bg: #132025;
+  --color-bg-subtle: #192a30;
+  --color-bg-card: rgba(25, 42, 48, 0.9);
+
+  --color-primary: #58cc02;
+  --color-primary-lip: #58a700;
+  --color-primary-ink: #a5ed6e;
+  --color-primary-soft: #a5ed6e;
+  --color-primary-wash: #233a17;
+
+  --color-text-main: #f1f5f9;
+  --color-text-muted: #94a3b8;
+
+  --font-display: 'Nunito', system-ui, sans-serif;
+  --font-body: 'Nunito Sans', system-ui, sans-serif;
+}
+
+/* ── Base resets for floating window transparency ──────── */
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  color: var(--color-text-main);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: var(--color-primary-wash);
+  color: var(--color-primary-ink);
+}
+
+/* ── Scrollbar styling ─────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(165, 237, 110, 0.2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(88, 204, 2, 0.4);
+}

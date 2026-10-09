@@ -1,0 +1,25 @@
+/* PixelMascot — canvas-rendered pixel-art sprite */
+
+.mascot-canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
+}
+
+.mascot-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-app-region: no-drag;
+  transition: filter 0.2s ease;
+}
+
+.mascot-wrapper:hover {
+  filter: brightness(1.12) drop-shadow(0 0 6px rgba(91, 155, 240, 0.45));
+}
+
+.mascot-wrapper:active {
+  filter: brightness(0.95);
+}
