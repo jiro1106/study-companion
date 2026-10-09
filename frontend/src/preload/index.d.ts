@@ -19,6 +19,10 @@ export interface MascotAPI {
 export interface BardhieAPI {
   readonly platform: string
   readonly mascot: MascotAPI
+  /** Open a URL in the system's default web browser. */
+  openExternal(url: string): void
+  /** Save text content to a file via a native save dialog. Returns whether it was saved. */
+  saveFile(content: string, defaultName: string): Promise<{ saved: boolean; filePath?: string }>
   /** Floating assistant desktop controls (only available in the floating window). */
   readonly floating?: FloatingAPI
 }

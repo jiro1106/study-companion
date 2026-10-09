@@ -5,5 +5,10 @@ out/
 Thumbs.db
 
 .env
+
+# Downloaded voice models (large binaries, fetched by setup script)
+backend/tts_models/
+__pycache__/
+*.pyc
 .venv/
 __pycache__/

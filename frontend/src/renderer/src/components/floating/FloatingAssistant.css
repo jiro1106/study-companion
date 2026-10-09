@@ -498,6 +498,21 @@
   border-bottom-width: 1px;
 }
 
+/* Stop button replaces send while the bot is generating */
+.send-btn-stop {
+  background: rgba(232, 57, 76, 0.15) !important;
+  border-color: rgba(232, 57, 76, 0.45) !important;
+  color: #e8394c !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+}
+
+.send-btn-stop:hover {
+  background: rgba(232, 57, 76, 0.28) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 3px 10px rgba(232, 57, 76, 0.35) !important;
+}
+
 .send-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
@@ -750,4 +765,110 @@
 .chat-chip:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* ── Voice: microphone states ──────────────────────────────── */
+
+/* Transcribing state — shows a spinning ring */
+.mic-btn-transcribing {
+  border-color: rgba(165, 237, 110, 0.4) !important;
+  color: #a5ed6e !important;
+  cursor: not-allowed;
+}
+
+.mic-spinner,
+.speak-spinner {
+  animation: voice-spin 0.9s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes voice-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error state — brief red flash */
+.mic-btn-error {
+  background: rgba(232, 57, 76, 0.18) !important;
+  color: #e8394c !important;
+  border-color: rgba(232, 57, 76, 0.45) !important;
+}
+
+/* ── Voice: speaker / TTS button states ────────────────────── */
+
+/* Loading (requesting speech from backend) */
+.speak-btn-loading {
+  color: #a5ed6e !important;
+  background: rgba(165, 237, 110, 0.1) !important;
+}
+
+/* Playing — gentle green pulse to show audio is playing */
+.speak-btn-playing {
+  color: #58cc02 !important;
+  background: rgba(88, 204, 2, 0.18) !important;
+  animation: speak-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes speak-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(88, 204, 2, 0); }
+  50%       { box-shadow: 0 0 0 4px rgba(88, 204, 2, 0.25); }
+}
+
+/* Error — brief red tint */
+.speak-btn-error {
+  color: #e8394c !important;
+  background: rgba(232, 57, 76, 0.15) !important;
+}
+
+/* ── Stop-generating bar ───────────────────────────────────── */
+
+.stop-generating-bar {
+  display: flex;
+  justify-content: center;
+  padding: 6px 14px 2px;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
+.stop-generating-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  font-family: 'Nunito', system-ui, sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.stop-generating-btn:hover {
+  background: rgba(232, 57, 76, 0.15);
+  border-color: rgba(232, 57, 76, 0.4);
+  color: #e8394c;
+}
+
+.stop-generating-btn:active {
+  transform: scale(0.97);
+}
+
+/* ── mic-btn: cancel-transcribing state ───────────────────── */
+
+/* Reuse existing mic-btn-transcribing class but make it look clickable
+   (orange tint) so users know the X means cancel                       */
+.mic-btn-transcribing {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  color: #f59e0b !important;
+  cursor: pointer !important;   /* override not-allowed set earlier */
+}
+
+.mic-btn-transcribing:hover {
+  background: rgba(232, 57, 76, 0.18) !important;
+  border-color: rgba(232, 57, 76, 0.5) !important;
+  color: #e8394c !important;
 }

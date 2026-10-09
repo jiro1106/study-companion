@@ -213,6 +213,7 @@ export default function FloatingAssistant(): React.JSX.Element {
         isLoading={isLoading}
         onSend={send}
         onEdit={edit}
+        onAbort={abort}
         onVoiceStart={handleVoiceStart}
         onVoiceEnd={handleVoiceEnd}
         onTyping={handleTyping}

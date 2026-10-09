@@ -1,6 +1,6 @@
-import { readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { readFileSync, renameSync, writeFile, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { app, BrowserWindow, dialog, type MessageBoxOptions, globalShortcut, ipcMain, powerMonitor, screen } from 'electron'
+import { app, BrowserWindow, dialog, type MessageBoxOptions, globalShortcut, ipcMain, powerMonitor, screen, shell } from 'electron'
 
 import { windowOptions } from './window-options'
 import { fitToDisplays, parseWindowState, serializeWindowState, type WindowState } from './window-state'
@@ -235,6 +235,30 @@ function setupIPC(): void {
     mascotEnabled = false
     saveSettings()
     syncMascot()
+  })
+
+  // Open a URL in the system's default browser.
+  ipcMain.on('shell:open-external', (_event, url: string) => {
+    if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
+      void shell.openExternal(url)
+    }
+  })
+
+  // Save text content to a file via native save dialog.
+  ipcMain.handle('file:save', async (_event, { content, defaultName }: { content: string; defaultName: string }) => {
+    const focusedWin = BrowserWindow.getFocusedWindow() ?? mainWindow ?? undefined
+    const result = await dialog.showSaveDialog(focusedWin!, {
+      defaultPath: defaultName,
+      filters: [
+        { name: 'Text files', extensions: ['txt', 'md'] },
+        { name: 'All files', extensions: ['*'] },
+      ],
+    })
+    if (result.canceled || !result.filePath) return { saved: false }
+    await new Promise<void>((resolve, reject) => {
+      writeFile(result.filePath!, content, 'utf8', (err) => (err ? reject(err) : resolve()))
+    })
+    return { saved: true, filePath: result.filePath }
   })
 }
 

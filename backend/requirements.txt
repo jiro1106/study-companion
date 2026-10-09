@@ -3,3 +3,16 @@ uvicorn[standard]>=0.30.0
 httpx>=0.27.0
 python-dotenv>=1.0.0
 pydantic>=2.7.0
+# multipart file uploads (STT endpoint)
+python-multipart>=0.0.9
+# Local Speech-to-Text via Whisper (CPU-first; int8 quantisation)
+faster-whisper>=1.0.3
+# PyAV >=15 dropped the `metadata_errors` kwarg that faster-whisper's audio
+# decoder passes to av.open(), breaking transcription. Pin below that.
+av>=11,<15
+# Local Text-to-Speech via Piper (ONNX runtime, CPU)
+# Requires a downloaded voice model – see backend/services/piper_tts.py
+piper-tts>=1.8.0
+# Audio file reading (used internally by faster-whisper / soundfile)
+# soundfile is pulled in automatically, but list it explicitly for clarity
+soundfile>=0.12.1

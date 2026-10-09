@@ -77,3 +77,22 @@ class PlannerRequest(BaseModel):
     days: int = Field(default=7, ge=1, le=90)
     topics: list[str] = Field(default_factory=list)
     context: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# /api/transcribe  (speech-to-text — request is multipart, response below)
+# ---------------------------------------------------------------------------
+
+
+class TranscribeResponse(BaseModel):
+    text: str
+
+
+# ---------------------------------------------------------------------------
+# /api/speak  (text-to-speech)
+# ---------------------------------------------------------------------------
+
+
+class SpeakRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=5000)
+    voice: str | None = None  # Optional override; defaults to TTS_DEFAULT_VOICE from config
