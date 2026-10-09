@@ -1,7 +1,7 @@
 # BARDHIE Desktop Phase 0 Design
 
 **Date:** 2026-10-09  
-**Status:** Awaiting written-spec approval  
+**Status:** Approved for implementation planning  
 **Branch:** `feature/desktop`
 
 ## Purpose
