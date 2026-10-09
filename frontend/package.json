@@ -4,6 +4,7 @@
   "private": true,
   "main": "out/main/index.js",
   "scripts": {
+    "predev": "node -e \"if(process.platform==='darwin'){const p='node_modules/electron/dist/Electron.app/Contents/Info.plist';for(const k of ['CFBundleName','CFBundleDisplayName'])require('child_process').execFileSync('plutil',['-replace',k,'-string','Bardy',p])}\"",
     "dev": "electron-vite dev",
     "dev:slow": "npm run dev -- --mode slow",
     "dev:error": "npm run dev -- --mode error",

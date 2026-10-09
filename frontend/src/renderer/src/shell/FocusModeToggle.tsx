@@ -71,7 +71,7 @@ export function FocusModeToggle(): React.JSX.Element | null {
         title={title}
         aria-label="Focus Mode"
         aria-pressed={enabled}
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-control border-2 border-b-4 border-border bg-surface px-3 py-2.5 text-sm font-extrabold tracking-[0.053em] text-fg-muted uppercase hover:bg-surface-2 aria-pressed:border-danger/50 aria-pressed:bg-danger-wash aria-pressed:text-danger disabled:cursor-not-allowed disabled:opacity-60 wide:justify-start"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-control border-2 border-b-4 border-danger/30 bg-surface px-3 py-2.5 text-sm font-extrabold text-danger hover:bg-danger-wash aria-pressed:border-danger/50 aria-pressed:bg-danger-wash disabled:cursor-not-allowed disabled:opacity-60 wide:justify-start"
       >
         {busy ? (
           <Loader2 {...ICON} size={18} className="shrink-0 animate-spin" />

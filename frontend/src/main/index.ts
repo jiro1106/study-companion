@@ -301,6 +301,8 @@ function handleStartupError(error: unknown): void {
 
 app.whenReady()
   .then(async () => {
+    // dev runs show Electron's default dock icon otherwise
+    app.dock?.setIcon(join(__dirname, '../../resources/icon.png'))
     loadSettings()
     setupIPC()
 
