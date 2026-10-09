@@ -57,6 +57,18 @@ npm run dev
 
 A native BARDHIE window should open and display `Platform: win32`. Keep PowerShell open while using the app; press `Ctrl + C` to stop it.
 
+## Preview loading and error states
+
+The app runs on sample data until the study engine is connected.
+
+| Command | What you see |
+|---|---|
+| `npm run dev` | Normal sample data |
+| `npm run dev:slow` | Every request takes about 2 seconds, so loading skeletons show |
+| `npm run dev:error` | Every request fails, so error states show |
+
+Delete decks or documents in the app to see empty states. Restarting restores the sample data.
+
 ## Verify your setup
 
 Run these before sharing changes:
