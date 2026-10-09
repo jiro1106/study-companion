@@ -16,7 +16,7 @@ const contentSecurityPolicy = [
 ].join('; ')
 
 const offlineCsp: Plugin = {
-  name: 'bardhie-offline-csp',
+  name: 'bardy-offline-csp',
   apply: 'build',
   transformIndexHtml: (html) =>
     html.replace(

@@ -1,6 +1,6 @@
-export const BLOCK_START_MARKER = '# === BARDHIE FOCUS BLOCK START ==='
-export const BLOCK_END_MARKER = '# === BARDHIE FOCUS BLOCK END ==='
-export const FIREWALL_RULE_PREFIX = 'BARDHIE-BLOCK'
+export const BLOCK_START_MARKER = '# === BARDY FOCUS BLOCK START ==='
+export const BLOCK_END_MARKER = '# === BARDY FOCUS BLOCK END ==='
+export const FIREWALL_RULE_PREFIX = 'BARDY-BLOCK'
 
 export const DISPLAY_BLOCKED_SITES: string[] = [
   'Facebook',

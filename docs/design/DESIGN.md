@@ -1,9 +1,9 @@
-# BARDHIE Design System
+# Bardy Design System
 
 **Brand:** Sprout (green)
 **Date:** 2026-10-09
 
-This file is the source of truth for BARDHIE's visual language. Two companions sit next to it:
+This file is the source of truth for Bardy's visual language. Two companions sit next to it:
 
 - `theme.css` holds the same tokens as CSS variables and a Tailwind v4 `@theme`, ready to import into the renderer.
 - `design-system.html` is the visual reference: every swatch, the type scale, and live components. Open it in a browser.
@@ -137,7 +137,7 @@ Each recipe names the tokens it uses. The HTML reference shows them live.
 
 **Side navigation.** Uppercase label buttons with a 24px icon. Current item: `--link` text and border on a light blue tint.
 
-**Chat.** User messages right-aligned on a light blue tint. BARDHIE replies left-aligned with a 2px border, a small green "BARDHIE" label, and page citations as small blue outlined chips ("p. 14").
+**Chat.** User messages right-aligned on a light blue tint. Bardy replies left-aligned with a 2px border, a small green "Bardy" label, and page citations as small blue outlined chips ("p. 14").
 
 ## Writing
 

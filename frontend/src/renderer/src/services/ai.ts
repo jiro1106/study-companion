@@ -1,5 +1,5 @@
 /**
- * AI Service for BARDHIE
+ * AI Service for Bardy
  *
  * Connects to the local FastAPI backend (Ollama integration) with support for:
  * - Dynamic port detection (8001 / 8000)
@@ -276,5 +276,5 @@ function getFallbackAiResponse(userPrompt: string): string {
     return "For best memorization, use spaced repetition! Review new cards today, then in 2 days, then next week. Your brain consolidates memory during sleep 🌙"
   }
 
-  return `I'm BARDHIE! 🐦 I received your message: "${userPrompt}". To enable full local AI reasoning, ensure the backend server and Ollama are active on http://127.0.0.1:8001.`
+  return `I'm Bardy! 🐦 I received your message: "${userPrompt}". To enable full local AI reasoning, ensure the backend server and Ollama are active on http://127.0.0.1:8001.`
 }

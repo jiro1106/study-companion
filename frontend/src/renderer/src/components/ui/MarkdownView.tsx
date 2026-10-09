@@ -42,8 +42,8 @@ export default function MarkdownView({
     e.preventDefault()
     const href = target.getAttribute('href') ?? ''
     if (!href) return
-    if (window.bardhie?.openExternal) {
-      window.bardhie.openExternal(href)
+    if (window.bardy?.openExternal) {
+      window.bardy.openExternal(href)
     } else {
       // Fallback for non-Electron / dev environments
       window.open(href, '_blank', 'noopener,noreferrer')

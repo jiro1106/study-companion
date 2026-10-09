@@ -1,10 +1,10 @@
 /**
- * PixelMascot — renders the BARDHIE cockatoo sprite on a
+ * PixelMascot — renders the Bardy cockatoo sprite on a
  * canvas element with crisp nearest-neighbour scaling.
  */
 
 import { useEffect, useRef, useMemo, useCallback } from 'react'
-import spriteData from '../../../../assets/bardhie-sprite.json'
+import spriteData from '../../../../assets/bardy-sprite.json'
 import { prerenderAllFrames, drawFrame } from './spriteRenderer'
 import { createAnimationController } from './animationController'
 import type { MascotState } from '../../types/assistant'
@@ -96,7 +96,7 @@ export default function PixelMascot({
       }
       role="button"
       tabIndex={0}
-      aria-label={`BARDHIE mascot — ${state}`}
+      aria-label={`Bardy mascot — ${state}`}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') onClick?.()
       }}

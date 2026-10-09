@@ -17,7 +17,7 @@ import {
 const execAsync = promisify(exec)
 
 const HOSTS_PATH = 'C:\\Windows\\System32\\drivers\\etc\\hosts'
-const BACKUP_PATH = 'C:\\Windows\\System32\\drivers\\etc\\hosts.bardhie.bak'
+const BACKUP_PATH = 'C:\\Windows\\System32\\drivers\\etc\\hosts.bardy.bak'
 
 export {
   BLOCK_START_MARKER,
@@ -33,7 +33,7 @@ let lastAlertTime = 0
 let closingTabs = false
 
 /**
- * Checks if the BARDHIE focus block is currently present in the Windows hosts file.
+ * Checks if the Bardy focus block is currently present in the Windows hosts file.
  * Reading hosts file does not require admin privileges.
  */
 export async function isFocusModeActive(): Promise<boolean> {
@@ -120,7 +120,7 @@ function Get-BlockedIps {
     return @($ips)
 }
 
-function Set-BardhieFirewall {
+function Set-BardyFirewall {
     param([bool]$Enable, [string[]]$Ips)
     Get-NetFirewallRule -ErrorAction SilentlyContinue |
         Where-Object { $_.DisplayName -like "$rulePrefix*" } |
@@ -144,7 +144,7 @@ try {
         $existing = [System.IO.File]::ReadAllText($hostsPath, [System.Text.Encoding]::UTF8)
     }
 
-    $pattern = "(?s)\\r?\\n?# === BARDHIE FOCUS BLOCK START ===.*?# === BARDHIE FOCUS BLOCK END ===\\r?\\n?"
+    $pattern = "(?s)\\r?\\n?# === BARDY FOCUS BLOCK START ===.*?# === BARDY FOCUS BLOCK END ===\\r?\\n?"
     $cleaned = [System.Text.RegularExpressions.Regex]::Replace($existing, $pattern, "").TrimEnd()
 
     if ($Action -eq "enable") {
@@ -155,12 +155,12 @@ ${buildBlockContent()}
         $final = if ([string]::IsNullOrWhiteSpace($cleaned)) { $block } else { $cleaned + "\`r\`n\`r\`n" + $block + "\`r\`n" }
         Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
         [System.IO.File]::WriteAllText($hostsPath, $final, [System.Text.Encoding]::UTF8)
-        Set-BardhieFirewall -Enable $true -Ips $ips
+        Set-BardyFirewall -Enable $true -Ips $ips
     } else {
         $final = if ([string]::IsNullOrWhiteSpace($cleaned)) { "" } else { $cleaned + "\`r\`n" }
         Set-ItemProperty -Path $hostsPath -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
         [System.IO.File]::WriteAllText($hostsPath, $final, [System.Text.Encoding]::UTF8)
-        Set-BardhieFirewall -Enable $false -Ips @()
+        Set-BardyFirewall -Enable $false -Ips @()
     }
 
     ipconfig /flushdns | Out-Null
@@ -171,7 +171,7 @@ ${buildBlockContent()}
     exit 1
 }
 `
-  return userDataScript('bardhie-focus-manager.ps1', scriptContent)
+  return userDataScript('bardy-focus-manager.ps1', scriptContent)
 }
 
 async function runFocusHelper(enable: boolean): Promise<void> {
@@ -208,7 +208,7 @@ Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
     Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
   }
 `
-  return userDataScript('bardhie-interrupt-browser-network.ps1', scriptContent)
+  return userDataScript('bardy-interrupt-browser-network.ps1', scriptContent)
 }
 
 /**
@@ -334,10 +334,10 @@ try {
   }
 } catch {}
 `
-  return userDataScript('bardhie-close-blocked-tabs.ps1', scriptContent)
+  return userDataScript('bardy-close-blocked-tabs.ps1', scriptContent)
 }
 
-function focusBardhieWindows(): void {
+function focusBardyWindows(): void {
   for (const win of BrowserWindow.getAllWindows()) {
     if (!win.isDestroyed()) {
       win.show()
@@ -364,7 +364,7 @@ export async function closeBlockedBrowserTabs(): Promise<void> {
     // Ignore errors during tab close
   } finally {
     closingTabs = false
-    focusBardhieWindows()
+    focusBardyWindows()
   }
 }
 
@@ -489,7 +489,7 @@ export function startDistractionWatcher(): void {
 
           if (Notification.isSupported()) {
             new Notification({
-              title: '🛡️ BARDHIE Focus Mode Active',
+              title: '🛡️ Bardy Focus Mode Active',
               body: `${detectedSite} was closed and blocked during your study session.`,
               silent: false
             }).show()

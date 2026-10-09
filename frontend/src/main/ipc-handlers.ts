@@ -141,7 +141,7 @@ ipcMain.handle('reminder:schedule', async (_event, label: string, delayMs: numbe
   if (!Notification.isSupported()) return
   setTimeout(() => {
     new Notification({
-      title: 'BARDHIE – Study reminder',
+      title: 'Bardy – Study reminder',
       body: label,
       silent: false
     }).show()
@@ -163,7 +163,7 @@ ipcMain.handle('block:confirm', async (_event, targetDesc?: string): Promise<boo
     type: 'question',
     title: 'Enable Focus Mode?',
     message: 'Block social media websites in browsers?',
-    detail: `BARDHIE will block access to ${targetDesc || 'Facebook, YouTube, Instagram, TikTok, Twitter / X, and Messenger'} across all web browsers during your study session.\n\nAlready-open tabs for these sites will be closed so they cannot stay loaded. You do not need to close or restart your browser.\n\nA Windows administrator prompt may appear to update network protection. You can disable focus mode at any time.`,
+    detail: `Bardy will block access to ${targetDesc || 'Facebook, YouTube, Instagram, TikTok, Twitter / X, and Messenger'} across all web browsers during your study session.\n\nAlready-open tabs for these sites will be closed so they cannot stay loaded. You do not need to close or restart your browser.\n\nA Windows administrator prompt may appear to update network protection. You can disable focus mode at any time.`,
     buttons: ['Enable Focus Mode', 'Cancel'],
     defaultId: 0,
     cancelId: 1

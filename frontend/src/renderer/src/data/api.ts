@@ -125,7 +125,7 @@ export function createApi(options: {
               {
                 role: 'system',
                 content:
-                  'You are BARDHIE, an expert study assistant. Answer questions directly using the document context when provided. Keep answers focused, clear, and structured for studying.' +
+                  'You are Bardy, an expert study assistant. Answer questions directly using the document context when provided. Keep answers focused, clear, and structured for studying.' +
                   (docContext ? `\n\nDocument Context:\n${docContext}` : '')
               },
               { role: 'user', content: text }
@@ -161,11 +161,11 @@ export function createApi(options: {
       call(() => db.quiz.filter((question) => documentId === undefined || question.documentId === documentId)),
 
     importDocument: async (): Promise<string | null> => {
-      if (typeof window === 'undefined' || !window.bardhie?.importPDF) {
+      if (typeof window === 'undefined' || !window.bardy?.importPDF) {
         throw new ApiError('unknown', 'PDF import is not available in this environment.')
       }
 
-      const result = await window.bardhie.importPDF()
+      const result = await window.bardy.importPDF()
       if (!result.ok) {
         if (result.reason === 'cancelled') return null
         throw new ApiError('unknown', result.message ?? 'Could not import the PDF.')
@@ -243,7 +243,7 @@ export function createApi(options: {
 }
 
 // ─── Backend helpers ──────────────────────────────────────────────────────────
-// These call the real BARDHIE FastAPI backend (backend/app.py): /api/summarize,
+// These call the real Bardy FastAPI backend (backend/app.py): /api/summarize,
 // /api/quiz and /api/flashcards, which in turn call Ollama. If the backend or
 // Ollama is unreachable, each helper fails soft so import still finishes.
 

@@ -1,6 +1,6 @@
-# BARDHIE Desktop (frontend)
+# Bardy Desktop (frontend)
 
-BARDHIE is a cross-platform Electron desktop application. Phase 0 provides a secure development shell that runs from one codebase on macOS and Windows.
+Bardy is a cross-platform Electron desktop application. Phase 0 provides a secure development shell that runs from one codebase on macOS and Windows.
 
 ## What you need
 
@@ -33,7 +33,7 @@ cd study-companion
 git switch feature/desktop-ui
 ```
 
-## Run BARDHIE on macOS
+## Run Bardy on macOS
 
 Open Terminal in the project folder and run:
 
@@ -43,9 +43,9 @@ npm install
 npm run dev
 ```
 
-A native BARDHIE window should open and display `Platform: darwin`. Keep the Terminal process running while using the app; press `Control + C` there to stop it.
+A native Bardy window should open and display `Platform: darwin`. Keep the Terminal process running while using the app; press `Control + C` there to stop it.
 
-## Run BARDHIE on Windows
+## Run Bardy on Windows
 
 Open PowerShell in the project folder and run:
 
@@ -55,7 +55,7 @@ npm install
 npm run dev
 ```
 
-A native BARDHIE window should open and display `Platform: win32`. Keep PowerShell open while using the app; press `Ctrl + C` to stop it.
+A native Bardy window should open and display `Platform: win32`. Keep PowerShell open while using the app; press `Ctrl + C` to stop it.
 
 ## Preview loading and error states
 
@@ -88,11 +88,11 @@ npm run build
 Test once on a Mac and once on a Windows machine:
 
 1. Run `npm run dev`.
-2. Confirm a normal, resizable BARDHIE window opens.
+2. Confirm a normal, resizable Bardy window opens.
 3. Confirm the displayed platform is `darwin` on macOS or `win32` on Windows.
 4. Change text in `frontend/src/renderer/src/App.tsx`, save it, and confirm the window hot-reloads.
 5. Restore the text before committing.
 
 ## Phase 0 boundaries
 
-This phase does not yet include AI/study features, PDF imports, local persistence, tray behavior, global shortcuts, background operation, installers, signing, or deployment. The Electron main process owns native capabilities; the sandboxed React renderer only receives the typed `window.bardhie.platform` value through the preload bridge.
+This phase does not yet include AI/study features, PDF imports, local persistence, tray behavior, global shortcuts, background operation, installers, signing, or deployment. The Electron main process owns native capabilities; the sandboxed React renderer only receives the typed `window.bardy.platform` value through the preload bridge.

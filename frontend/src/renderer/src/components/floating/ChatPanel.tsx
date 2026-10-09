@@ -4,16 +4,17 @@
  */
 
 import { useEffect, useRef } from 'react'
+import { Brain, CalendarDays, Hand, Lightbulb, Zap } from 'lucide-react'
 import type { ChatMessage as ChatMessageType } from '../../types/assistant'
 import ChatMessage from './ChatMessage'
 import MessageInput from './MessageInput'
 import PixelMascot from '../mascot/PixelMascot'
 
 const QUICK_PROMPTS = [
-  { label: '🧠 Quiz me', prompt: 'Give me a quick 1-question multiple choice quiz on general biology or science.' },
-  { label: '💡 Explain simply', prompt: 'Explain the concept of spaced repetition in simple terms for a student.' },
-  { label: '⚡ Study tip', prompt: 'Give me your best 1-sentence tip for staying focused while studying.' },
-  { label: '📅 Plan session', prompt: 'Help me plan a 2-hour study session with active breaks.' }
+  { label: 'Quiz me', icon: Brain, prompt: 'Give me a quick 1-question multiple choice quiz on general biology or science.' },
+  { label: 'Explain simply', icon: Lightbulb, prompt: 'Explain the concept of spaced repetition in simple terms for a student.' },
+  { label: 'Study tip', icon: Zap, prompt: 'Give me your best 1-sentence tip for staying focused while studying.' },
+  { label: 'Plan session', icon: CalendarDays, prompt: 'Help me plan a 2-hour study session with active breaks.' }
 ]
 
 interface ChatPanelProps {
@@ -57,7 +58,7 @@ export default function ChatPanel({
         {isEmpty ? (
           <div className="chat-welcome">
             <PixelMascot state="awake" size={56} />
-            <p className="chat-welcome-title">Hey there! 👋</p>
+            <p className="chat-welcome-title">Hey there! <Hand size={16} className="inline align-text-bottom" aria-hidden /></p>
             <p className="chat-welcome-subtitle">
               I&rsquo;m Bardy, your AI study companion.<br />
               Ask me anything, or try one of these quick prompts:
@@ -71,6 +72,7 @@ export default function ChatPanel({
                   onClick={() => onSend(qp.prompt)}
                   disabled={isLoading}
                 >
+                  <qp.icon size={13} aria-hidden />
                   {qp.label}
                 </button>
               ))}

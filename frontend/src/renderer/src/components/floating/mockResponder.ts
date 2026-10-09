@@ -6,7 +6,7 @@
  */
 
 const MOCK_RESPONSES: string[] = [
-  "Hi! I'm BARDHIE 🐦 Your floating study companion is ready. What would you like to work on?",
+  "Hi! I'm Bardy 🐦 Your floating study companion is ready. What would you like to work on?",
   "Great question! Let me think about that for a moment… I'd suggest starting with your most challenging topic while your focus is fresh.",
   "I'm here to help! Try breaking your study session into 25-minute focused blocks with short breaks in between.",
   "Need help with a specific subject? Just tell me what you're studying and I'll do my best to assist!",

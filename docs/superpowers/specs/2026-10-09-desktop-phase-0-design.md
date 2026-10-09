@@ -1,4 +1,4 @@
-# BARDHIE Desktop Phase 0 Design
+# Bardy Desktop Phase 0 Design
 
 **Date:** 2026-10-09
 
@@ -8,9 +8,9 @@
 
 ## Purpose
 
-Phase 0 establishes a secure, cross-platform Electron development shell for BARDHIE. It gives the four-person hackathon team a stable desktop foundation that launches locally on macOS and Windows before any AI, document, study, or background-runtime features are added.
+Phase 0 establishes a secure, cross-platform Electron development shell for Bardy. It gives the four-person hackathon team a stable desktop foundation that launches locally on macOS and Windows before any AI, document, study, or background-runtime features are added.
 
-The immediate user-visible outcome is deliberately small: running `npm run dev` opens a normal, resizable native window containing a minimal BARDHIE placeholder screen and the current operating-system platform reported through the preload bridge.
+The immediate user-visible outcome is deliberately small: running `npm run dev` opens a normal, resizable native window containing a minimal Bardy placeholder screen and the current operating-system platform reported through the preload bridge.
 
 ## Constraints
 
@@ -33,11 +33,11 @@ This approach provides the smallest maintained setup that coordinates Electron's
 Phase 0 includes:
 
 - Electron main, preload, and renderer entry points.
-- A normal, resizable `BrowserWindow` titled `BARDHIE`.
+- A normal, resizable `BrowserWindow` titled `Bardy`.
 - React rendering and Vite hot reload during development.
 - TypeScript configuration for all three Electron process contexts.
 - Tailwind installation and renderer integration only.
-- A typed `window.bardhie` preload API exposing a read-only `platform` string.
+- A typed `window.bardy` preload API exposing a read-only `platform` string.
 - Secure renderer defaults.
 - npm scripts for development, type-checking, and production compilation.
 - A committed npm lockfile.
@@ -65,7 +65,7 @@ Phase 0 does not include:
 The application has three process boundaries:
 
 1. **Main process** — owns Electron application lifecycle and creates the native window.
-2. **Preload process** — exposes the narrow, typed `window.bardhie` API through Electron's context bridge.
+2. **Preload process** — exposes the narrow, typed `window.bardy` API through Electron's context bridge.
 3. **React renderer** — owns visible UI and behaves like a sandboxed browser application.
 
 The renderer must not import Node.js or Electron APIs. All future privileged capabilities—including Ollama access, filesystem operations, persistence, tray control, and global shortcuts—must be implemented in the main process and exposed as narrowly scoped preload methods. Raw IPC primitives must never be exposed to the renderer.
@@ -85,7 +85,7 @@ The application loads only the local Vite development URL during development and
 
 ## Window and Lifecycle Behavior
 
-- The first launch creates one `960 × 640` resizable window titled `BARDHIE`.
+- The first launch creates one `960 × 640` resizable window titled `Bardy`.
 - The window behaves like a standard desktop window; it is not floating or always on top.
 - Closing all windows quits the application on Windows.
 - On macOS, closing the window leaves normal macOS application lifecycle behavior in place, and activating the application recreates the window when none exists.
@@ -95,9 +95,9 @@ The application loads only the local Vite development URL during development and
 
 The renderer shows a semantic, keyboard-readable placeholder containing:
 
-- The product name `BARDHIE`.
+- The product name `Bardy`.
 - The message `Desktop application is running.`
-- The platform value provided by `window.bardhie.platform`.
+- The platform value provided by `window.bardy.platform`.
 
 Tailwind is connected through its Vite integration and imported from the renderer stylesheet. Only minimal utility classes needed to make the placeholder readable are used. No design-system naming, tokens, component library, dark-mode strategy, or branding decisions are introduced.
 
@@ -160,7 +160,7 @@ Manual smoke testing is required on the project owner's Mac and a teammate's Win
 
 1. Install Node.js 24 and run `npm install`.
 2. Run `npm run dev`.
-3. Confirm a normal native BARDHIE window opens.
+3. Confirm a normal native Bardy window opens.
 4. Confirm the displayed platform is correct (`darwin` or `win32`).
 5. Change renderer copy and confirm hot reload updates the window.
 6. Close the window and confirm the expected operating-system lifecycle behavior.
@@ -172,7 +172,7 @@ Phase 0 is accepted when:
 - The repository is on `feature/desktop` and `main` remains at its original commit.
 - Dependency installation succeeds from the committed lockfile.
 - `npm run dev` launches the native application on both macOS and Windows.
-- The renderer displays the BARDHIE placeholder and correct platform.
+- The renderer displays the Bardy placeholder and correct platform.
 - The browser renderer cannot access Node.js globals directly.
 - `npm run typecheck` exits successfully.
 - `npm run build` exits successfully.

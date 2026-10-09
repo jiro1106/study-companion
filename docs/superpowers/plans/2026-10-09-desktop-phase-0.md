@@ -1,4 +1,4 @@
-# BARDHIE Desktop Phase 0 Implementation Plan
+# Bardy Desktop Phase 0 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -17,16 +17,16 @@
 - Use Node.js 24 LTS and npm with a committed `package-lock.json`.
 - Use `electron-vite`; do not add Electron Forge, Docker, a server backend, or packaging tools.
 - Keep the renderer browser-like: `contextIsolation: true`, `nodeIntegration: false`, and `sandbox: true`.
-- Expose only `window.bardhie.platform: string`; do not expose raw Electron, Node.js, or IPC objects.
+- Expose only `window.bardy.platform: string`; do not expose raw Electron, Node.js, or IPC objects.
 - Wire Tailwind only; do not create tokens, themes, components, or branding.
 - Do not add Ollama, PDFs, persistence, tray, shortcuts, floating behavior, installers, signing, or deployment.
-- Use a normal resizable `960 × 640` window titled `BARDHIE`.
+- Use a normal resizable `960 × 640` window titled `Bardy`.
 - Workers editing the shared checkout must not run Git staging, commit, branch, reset, checkout, clean, or stash commands; the controller owns Git operations.
 
 ## Review Focus
 
 - **Renderer privilege leakage:** `tests/window-options.test.ts` must assert all three security flags; Task 5 must run it before accepting the shell.
-- **Preload/type-contract drift:** Task 2 types the exposed object as `BardhieAPI`, Task 3 compiles its consumer, and Task 5 manually confirms the displayed platform.
+- **Preload/type-contract drift:** Task 2 types the exposed object as `BardyAPI`, Task 3 compiles its consumer, and Task 5 manually confirms the displayed platform.
 - **Development works but production paths fail:** Task 5 runs the full production build and asserts main, preload, and renderer artifacts exist.
 - **Dependency or lockfile drift:** Task 1 creates the lockfile and Task 5 performs a clean `npm ci` before all other final checks.
 - **Platform-specific compilation failure:** Task 4 defines both Windows and macOS CI jobs; the README records the real-machine smoke test still required on each OS.
@@ -73,7 +73,7 @@ Requested worker configuration is `gpt-5.6-terra` with medium reasoning. If that
 
 **Interfaces:**
 - Consumes: approved Phase 0 spec and Node.js 24.
-- Produces: npm scripts `dev`, `test`, `typecheck:node`, `typecheck:web`, `typecheck`, and `build`; `BardhieAPI` with `readonly platform: string`; Electron/Vite/Tailwind build configuration consumed by Tasks 2–5.
+- Produces: npm scripts `dev`, `test`, `typecheck:node`, `typecheck:web`, `typecheck`, and `build`; `BardyAPI` with `readonly platform: string`; Electron/Vite/Tailwind build configuration consumed by Tasks 2–5.
 
 - [ ] **Step 1: Create the package manifest**
 
@@ -112,12 +112,12 @@ Expected: npm exits 0 and creates `package-lock.json`.
 In `src/preload/index.d.ts`, export:
 
 ```ts
-export interface BardhieAPI {
+export interface BardyAPI {
   readonly platform: string
 }
 ```
 
-Augment the global `Window` interface with `readonly bardhie: BardhieAPI`.
+Augment the global `Window` interface with `readonly bardy: BardyAPI`.
 
 - [ ] **Step 5: Add environment metadata and ignored outputs**
 
@@ -157,8 +157,8 @@ git commit -m "chore: scaffold desktop runtime"
 - Create: `tests/window-options.test.ts`
 
 **Interfaces:**
-- Consumes: `BardhieAPI` from `src/preload/index.d.ts`; Task 1's main/preload compilation and npm test scripts.
-- Produces: secure `BrowserWindow` creation, normal Windows/macOS lifecycle behavior, and a frozen `window.bardhie` runtime object matching `BardhieAPI`.
+- Consumes: `BardyAPI` from `src/preload/index.d.ts`; Task 1's main/preload compilation and npm test scripts.
+- Produces: secure `BrowserWindow` creation, normal Windows/macOS lifecycle behavior, and a frozen `window.bardy` runtime object matching `BardyAPI`.
 
 - [ ] **Step 1: Write the failing security contract test**
 
@@ -168,7 +168,7 @@ Create `tests/window-options.test.ts`. Import `windowOptions` from `src/main/win
 assert.equal(windowOptions.width, 960)
 assert.equal(windowOptions.height, 640)
 assert.equal(windowOptions.resizable, true)
-assert.equal(windowOptions.title, 'BARDHIE')
+assert.equal(windowOptions.title, 'Bardy')
 assert.equal(windowOptions.webPreferences.contextIsolation, true)
 assert.equal(windowOptions.webPreferences.nodeIntegration, false)
 assert.equal(windowOptions.webPreferences.sandbox, true)
@@ -186,7 +186,7 @@ Create and export `windowOptions` from `src/main/window-options.ts` with the exa
 
 - [ ] **Step 4: Implement main-process lifecycle and loading**
 
-In `src/main/index.ts`, implement `createWindow(): Promise<BrowserWindow>` and a startup-error handler that logs `Failed to start BARDHIE` and exits with status 1. The window must:
+In `src/main/index.ts`, implement `createWindow(): Promise<BrowserWindow>` and a startup-error handler that logs `Failed to start Bardy` and exits with status 1. The window must:
 
 - merge the tested options with the compiled preload path;
 - load `process.env.ELECTRON_RENDERER_URL` in development;
@@ -196,7 +196,7 @@ In `src/main/index.ts`, implement `createWindow(): Promise<BrowserWindow>` and a
 
 - [ ] **Step 5: Implement the narrow preload API**
 
-In `src/preload/index.ts`, create a `BardhieAPI` value containing only `platform: process.platform`, freeze it, and expose it as `bardhie` using `contextBridge.exposeInMainWorld`. Do not expose `ipcRenderer`, `process`, Electron modules, or Node APIs.
+In `src/preload/index.ts`, create a `BardyAPI` value containing only `platform: process.platform`, freeze it, and expose it as `bardy` using `contextBridge.exposeInMainWorld`. Do not expose `ipcRenderer`, `process`, Electron modules, or Node APIs.
 
 - [ ] **Step 6: Verify GREEN**
 
@@ -235,12 +235,12 @@ git commit -m "feat: add secure electron runtime"
 - Create: `src/renderer/src/index.css`
 
 **Interfaces:**
-- Consumes: global `window.bardhie: BardhieAPI` and Task 1's renderer/Tailwind configuration.
+- Consumes: global `window.bardy: BardyAPI` and Task 1's renderer/Tailwind configuration.
 - Produces: a semantic React placeholder that displays the exact Phase 0 copy and platform value.
 
 - [ ] **Step 1: Create the renderer entry document**
 
-Create `src/renderer/index.html` with a `#root` mount point, page title `BARDHIE`, and module entry `/src/main.tsx`.
+Create `src/renderer/index.html` with a `#root` mount point, page title `Bardy`, and module entry `/src/main.tsx`.
 
 - [ ] **Step 2: Create the React entry point and stylesheet**
 
@@ -250,9 +250,9 @@ Create `src/renderer/index.html` with a `#root` mount point, page title `BARDHIE
 
 `App.tsx` returns a semantic `<main>` containing:
 
-- heading text `BARDHIE`;
+- heading text `Bardy`;
 - body text `Desktop application is running.`;
-- a visible label and code-formatted `window.bardhie.platform` value.
+- a visible label and code-formatted `window.bardy.platform` value.
 
 Do not introduce reusable components, design tokens, themes, assets, navigation, or application state.
 
@@ -318,7 +318,7 @@ Run:
 ```bash
 git diff --check
 rg -n "windows-latest|macos-latest|npm ci|npm test|npm run typecheck|npm run build" .github/workflows/desktop-ci.yml
-rg -n "Node.js 24|npm run dev|window.bardhie|Windows|macOS" README.md
+rg -n "Node.js 24|npm run dev|window.bardy|Windows|macOS" README.md
 ```
 
 Expected: `git diff --check` exits 0; every required workflow command, platform, prerequisite, and architecture term is present.
@@ -389,7 +389,7 @@ out/renderer/index.html
 
 Run `npm run dev` on the project owner's Mac and confirm:
 
-- a normal resizable window titled `BARDHIE` opens;
+- a normal resizable window titled `Bardy` opens;
 - the exact placeholder copy appears;
 - platform displays `darwin`;
 - changing renderer copy triggers hot reload;

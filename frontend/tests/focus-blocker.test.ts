@@ -45,12 +45,12 @@ test('display blocked sites lists the primary platforms', () => {
 })
 
 test('block markers are well-formed', () => {
-  assert.equal(BLOCK_START_MARKER, '# === BARDHIE FOCUS BLOCK START ===')
-  assert.equal(BLOCK_END_MARKER, '# === BARDHIE FOCUS BLOCK END ===')
+  assert.equal(BLOCK_START_MARKER, '# === BARDY FOCUS BLOCK START ===')
+  assert.equal(BLOCK_END_MARKER, '# === BARDY FOCUS BLOCK END ===')
 })
 
 test('firewall rule prefix is stable so enable/disable can find the same rules', () => {
-  assert.equal(FIREWALL_RULE_PREFIX, 'BARDHIE-BLOCK')
+  assert.equal(FIREWALL_RULE_PREFIX, 'BARDY-BLOCK')
 })
 
 test('isBlockedBrowserTitle matches open tabs for every blocked platform', () => {
@@ -68,7 +68,7 @@ test('isBlockedBrowserTitle matches open tabs for every blocked platform', () =>
 test('isBlockedBrowserTitle ignores unrelated browser tabs', () => {
   assert.equal(isBlockedBrowserTitle(''), false)
   assert.equal(isBlockedBrowserTitle('Google'), false)
-  assert.equal(isBlockedBrowserTitle('BARDHIE'), false)
+  assert.equal(isBlockedBrowserTitle('Bardy'), false)
   assert.equal(isBlockedBrowserTitle('Microsoft Excel'), false)
   assert.equal(isBlockedBrowserTitle('GitHub - Google Chrome'), false)
 })

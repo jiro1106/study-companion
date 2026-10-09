@@ -27,7 +27,7 @@ const NAV: Array<{ screen: ScreenName; label: string; Icon: typeof Home }> = [
   { screen: "quiz", label: "Quiz", Icon: CircleHelp },
 ];
 
-const isMac = window.bardhie?.platform === "darwin";
+const isMac = window.bardy?.platform === "darwin";
 export const QUICK_ASK_KEYS = isMac ? "⌘ K" : "Ctrl K";
 
 export function Sidebar({

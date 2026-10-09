@@ -1,6 +1,6 @@
 # Backend
 
-The BARDHIE backend is a FastAPI service that uses a local [Ollama](https://ollama.com/) model for chat and study-content generation.
+The Bardy backend is a FastAPI service that uses a local [Ollama](https://ollama.com/) model for chat and study-content generation.
 
 ## Prerequisites
 

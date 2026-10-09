@@ -45,7 +45,7 @@ export interface BlockAPI {
   confirm(targetDesc?: string): Promise<boolean>
 }
 
-export interface BardhieAPI {
+export interface BardyAPI {
   readonly platform: string
   readonly mascot: MascotAPI
   /** Open a URL in the system's default web browser. */
@@ -62,6 +62,6 @@ export interface BardhieAPI {
 
 declare global {
   interface Window {
-    readonly bardhie: BardhieAPI
+    readonly bardy: BardyAPI
   }
 }

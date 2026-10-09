@@ -1,4 +1,4 @@
-# BARDHIE Desktop UI Design
+# Bardy Desktop UI Design
 
 **Date:** 2026-10-09
 
@@ -10,7 +10,7 @@
 
 ## Purpose
 
-Replace the Phase 0 placeholder with the first real BARDHIE interface: an app shell and five working screens built from the approved design system and UI mockup, running on in-memory sample data until the backend exists.
+Replace the Phase 0 placeholder with the first real Bardy interface: an app shell and five working screens built from the approved design system and UI mockup, running on in-memory sample data until the backend exists.
 
 ## References
 
@@ -86,4 +86,4 @@ Node 24 (`.nvmrc`), managed locally with fnm. CI keeps testing Node 24 on macOS 
 
 ## Security
 
-The Phase 0 model stays: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, preload exposes only a frozen `window.bardhie` with `platform`. This build adds no preload methods and no IPC.
+The Phase 0 model stays: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, preload exposes only a frozen `window.bardy` with `platform`. This build adds no preload methods and no IPC.

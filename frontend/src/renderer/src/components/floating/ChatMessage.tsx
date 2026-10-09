@@ -8,6 +8,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { Brain, Lightbulb, NotebookPen, type LucideIcon } from 'lucide-react'
 import type { ChatMessage as ChatMessageType } from '../../types/assistant'
 import MarkdownView from '../ui/MarkdownView'
 import { speakText, stopCurrentSpeech, type TtsState } from '../../services/voice'
@@ -25,13 +26,14 @@ interface ChatMessageProps {
 
 interface Chip {
   label: string
+  icon?: LucideIcon
   send: string
 }
 
 const FOLLOW_UP_CHIPS: Chip[] = [
-  { label: '💡 Explain more', send: 'Can you explain that in more detail?' },
-  { label: '📝 Give an example', send: 'Can you give me an example?' },
-  { label: '🧠 Quiz me on this', send: 'Quiz me on what you just explained.' },
+  { label: 'Explain more', icon: Lightbulb, send: 'Can you explain that in more detail?' },
+  { label: 'Give an example', icon: NotebookPen, send: 'Can you give me an example?' },
+  { label: 'Quiz me on this', icon: Brain, send: 'Quiz me on what you just explained.' },
 ]
 
 /** Extract lettered/numbered options ("A) foo", "B. bar", "1) baz") from a bot message. */
@@ -194,9 +196,9 @@ export default function ChatMessage({
   // ── Save as file ──────────────────────────────────────────────────────────
 
   const handleSave = useCallback(async () => {
-    if (!window.bardhie?.saveFile) return
+    if (!window.bardy?.saveFile) return
     const timestamp = new Date().toISOString().slice(0, 10)
-    const result = await window.bardhie.saveFile(message.content, `bardy-note-${timestamp}.txt`)
+    const result = await window.bardy.saveFile(message.content, `bardy-note-${timestamp}.txt`)
     if (result.saved) {
       setSaveState('saved')
       setTimeout(() => setSaveState('idle'), 1800)
@@ -263,7 +265,7 @@ export default function ChatMessage({
       )}
 
       {/* Save as file (assistant only, not while streaming) */}
-      {!isUser && !isStreaming && typeof window.bardhie?.saveFile === 'function' && (
+      {!isUser && !isStreaming && typeof window.bardy?.saveFile === 'function' && (
         <button
           type="button"
           className="chat-action-btn"
@@ -405,6 +407,7 @@ export default function ChatMessage({
               onClick={() => onChipClick?.(chip.send)}
               title={chip.send}
             >
+              {chip.icon && <chip.icon size={13} aria-hidden />}
               {chip.label}
             </button>
           ))}

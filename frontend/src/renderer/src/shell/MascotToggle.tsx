@@ -6,7 +6,7 @@ import { ICON } from '../ui/icon'
 /** Shows or hides the floating mascot that appears when the main window is minimized. */
 export function MascotToggle({ compact }: { compact: boolean }): React.JSX.Element | null {
   const [enabled, setEnabled] = useState(true)
-  const mascot = window.bardhie?.mascot
+  const mascot = window.bardy?.mascot
 
   // Re-read on focus: the pet's X button can switch it off from outside this window.
   useEffect(() => {

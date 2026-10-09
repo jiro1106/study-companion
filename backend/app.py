@@ -1,5 +1,5 @@
 """
-app.py  –  BARDHIE Study Companion API entry point.
+app.py  –  Bardy Study Companion API entry point.
 
 Registers all routers and middleware; contains no business logic.
 Run with:
@@ -14,9 +14,9 @@ from core.config import HOST, PORT
 from routers import chat, flashcards, health, planner, quiz, summarize, speak, transcribe, tutor
 
 app = FastAPI(
-    title="BARDHIE Study Companion API",
+    title="Bardy Study Companion API",
     description=(
-        "Backend API for the BARDHIE desktop study companion.\n\n"
+        "Backend API for the Bardy desktop study companion.\n\n"
         "| Route | Purpose |\n"
         "|---|---|\n"
         "| GET  /api/health      | Ollama connectivity check |\n"

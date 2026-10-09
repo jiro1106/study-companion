@@ -5,8 +5,8 @@ import { ICON } from '../ui/icon'
 
 /** Toggles OS-level blocking of social media + YouTube across all browsers while studying. */
 export function FocusModeToggle(): React.JSX.Element | null {
-  const focus = window.bardhie?.focus
-  const block = window.bardhie?.block
+  const focus = window.bardy?.focus
+  const block = window.bardy?.block
   const [enabled, setEnabled] = useState(false)
   const [blockedSites, setBlockedSites] = useState<string[]>([])
   const [busy, setBusy] = useState(false)

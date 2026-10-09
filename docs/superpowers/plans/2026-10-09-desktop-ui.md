@@ -1,10 +1,10 @@
-# BARDHIE Desktop UI Implementation Plan
+# Bardy Desktop UI Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the Phase 0 placeholder with the BARDHIE app shell and five working screens (Today, Library, Ask notes, Flashcards, Quiz) plus a Quick ask overlay, running fully offline on in-memory sample data, with the Electron app moved into `frontend/`.
+**Goal:** Replace the Phase 0 placeholder with the Bardy app shell and five working screens (Today, Library, Ask notes, Flashcards, Quiz) plus a Quick ask overlay, running fully offline on in-memory sample data, with the Electron app moved into `frontend/`.
 
-**Architecture:** The Electron app becomes a self-contained npm project in `frontend/`. The main process gains window size/position persistence. The renderer is React + Tailwind v4 using the BARDHIE design tokens; every screen reads data only through `src/renderer/src/data/`, an async in-memory API whose behavior (`normal`, `slow`, `error`) is chosen by the Vite mode, so the backend can replace it later without touching screens. Navigation is one typed React state value.
+**Architecture:** The Electron app becomes a self-contained npm project in `frontend/`. The main process gains window size/position persistence. The renderer is React + Tailwind v4 using the Bardy design tokens; every screen reads data only through `src/renderer/src/data/`, an async in-memory API whose behavior (`normal`, `slow`, `error`) is chosen by the Vite mode, so the backend can replace it later without touching screens. Navigation is one typed React state value.
 
 **Tech Stack:** Node.js 24, npm, Electron 44, electron-vite 5, React 19, TypeScript 7, Tailwind CSS 4, `@fontsource/nunito`, `@fontsource/nunito-sans`, `lucide-react`, Node's built-in test runner.
 
@@ -16,7 +16,7 @@
 - Node 24 (`.nvmrc` = `24`). Locally, `fnm` switches automatically on `cd`; run `node --version` and confirm `v24` before installing anything.
 - All npm commands run inside `frontend/` after Task 1.
 - Fully offline: the renderer makes no network requests, loads no remote fonts, scripts, or images.
-- Keep Phase 0 security exactly: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`; preload exposes only frozen `window.bardhie.platform`. Add no IPC and no preload methods.
+- Keep Phase 0 security exactly: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`; preload exposes only frozen `window.bardy.platform`. Add no IPC and no preload methods.
 - Colors only through design tokens (Tailwind classes such as `bg-primary`, `text-fg-muted`, `border-border`). No raw hex values in components except inside `Mascot.tsx`, whose pixel palette is defined in `DESIGN.md`.
 - No shadows, no gradients, 2px borders, 4px bottom "lip" on pressable elements, radius `rounded-control` (12px) for controls and `rounded-card` (16px) for cards.
 - Icons only from `lucide-react`, always `strokeWidth={2.4}` and `aria-hidden`.
@@ -181,9 +181,9 @@ Run `npm test` in `frontend/`. Expected: 1 passing test.
 Root `README.md`:
 
 ```markdown
-# BARDHIE
+# Bardy
 
-BARDHIE is an offline study companion for macOS and Windows: it reads your PDFs and turns them into summaries, flashcards, and quizzes with a local AI model.
+Bardy is an offline study companion for macOS and Windows: it reads your PDFs and turns them into summaries, flashcards, and quizzes with a local AI model.
 
 ## Repository layout
 
@@ -203,8 +203,8 @@ See `frontend/README.md`. In short:
 ```
 
 In `frontend/README.md`:
-- Change the title to `# BARDHIE Desktop (frontend)`.
-- In "Run BARDHIE on macOS" and "Run BARDHIE on Windows", add `cd frontend` as the first command.
+- Change the title to `# Bardy Desktop (frontend)`.
+- In "Run Bardy on macOS" and "Run Bardy on Windows", add `cd frontend` as the first command.
 - In "Manual smoke test" step 4, change `src/renderer/src/App.tsx` to `frontend/src/renderer/src/App.tsx`.
 - In "Verify your setup", add the line `Run these from the frontend folder.` above the code block.
 - Under "What you need", add: `Node is pinned in frontend/.nvmrc. With fnm (https://github.com/Schniz/fnm) installed, run fnm install once in frontend/ and it switches automatically.`
@@ -354,7 +354,7 @@ test('uses secure desktop window options', () => {
   assert.equal(windowOptions.minWidth, MIN_WIDTH)
   assert.equal(windowOptions.minHeight, MIN_HEIGHT)
   assert.equal(windowOptions.resizable, true)
-  assert.equal(windowOptions.title, 'BARDHIE')
+  assert.equal(windowOptions.title, 'Bardy')
   assert.equal(windowOptions.webPreferences.contextIsolation, true)
   assert.equal(windowOptions.webPreferences.nodeIntegration, false)
   assert.equal(windowOptions.webPreferences.sandbox, true)
@@ -465,7 +465,7 @@ export const windowOptions = {
   minWidth: 720,
   minHeight: 520,
   resizable: true,
-  title: 'BARDHIE',
+  title: 'Bardy',
   webPreferences: {
     contextIsolation: true,
     nodeIntegration: false,
@@ -519,7 +519,7 @@ function saveWindowState(window: BrowserWindow): void {
   try {
     writeFileSync(windowStatePath(), serializeWindowState(state))
   } catch (error) {
-    console.error('Could not save BARDHIE window state', error)
+    console.error('Could not save Bardy window state', error)
   }
 }
 
@@ -551,7 +551,7 @@ export async function createWindow(): Promise<BrowserWindow> {
 }
 
 function handleStartupError(error: unknown): void {
-  console.error('Failed to start BARDHIE', error)
+  console.error('Failed to start Bardy', error)
   app.exit(1)
 }
 
@@ -582,7 +582,7 @@ npm run build
 npm run dev
 ```
 
-Manual: resize and move the window, quit (Cmd+Q / close on Windows), run `npm run dev` again; the window reopens at the same size and place. Try to shrink below 720 × 520; it stops. Delete the file (macOS: `~/Library/Application Support/bardhie/window-state.json`; Windows: `%APPDATA%\bardhie\window-state.json`), relaunch; it opens at 1100 × 720. Write `{"width": 9` into the file, relaunch; it opens at 1100 × 720.
+Manual: resize and move the window, quit (Cmd+Q / close on Windows), run `npm run dev` again; the window reopens at the same size and place. Try to shrink below 720 × 520; it stops. Delete the file (macOS: `~/Library/Application Support/bardy/window-state.json`; Windows: `%APPDATA%\bardy\window-state.json`), relaunch; it opens at 1100 × 720. Write `{"width": 9` into the file, relaunch; it opens at 1100 × 720.
 
 - [ ] **Step 9: Commit**
 
@@ -709,7 +709,7 @@ const contentSecurityPolicy = [
 ].join('; ')
 
 const offlineCsp: Plugin = {
-  name: 'bardhie-offline-csp',
+  name: 'bardy-offline-csp',
   apply: 'build',
   transformIndexHtml: (html) =>
     html.replace(
@@ -739,7 +739,7 @@ Replace `App.tsx` for this check only:
 export default function App(): React.JSX.Element {
   return (
     <main className="grid h-full place-content-center gap-3 p-6 text-center">
-      <h1 className="font-display text-heading font-black text-primary-ink">bardhie</h1>
+      <h1 className="font-display text-heading font-black text-primary-ink">bardy</h1>
       <p className="text-fg-muted">Tokens and fonts loaded.</p>
       <button className="rounded-control border-b-4 border-primary-lip bg-primary px-5 py-3 text-label font-extrabold uppercase text-on-primary">Start session</button>
     </main>
@@ -1221,7 +1221,7 @@ export class ApiError extends Error {
   }
 }
 
-export const OFFLINE_MESSAGE = "Couldn't reach BARDHIE's study engine. Check that it's running, then try again."
+export const OFFLINE_MESSAGE = "Couldn't reach Bardy's study engine. Check that it's running, then try again."
 
 export function toApiError(error: unknown): ApiError {
   return error instanceof ApiError ? error : new ApiError('unknown', 'Something went wrong. Try again.')
@@ -1606,7 +1606,7 @@ const PALETTE: Record<string, string> = { G: '#58cc02', D: '#58a700', L: '#a5ed6
 export function Mascot({ awake = true, size = 64 }: { awake?: boolean; size?: number }): React.JSX.Element {
   const rows = AWAKE.map((row, y) => (awake ? row : (ASLEEP_ROWS[y] ?? row)))
   return (
-    <svg viewBox="0 0 16 18" width={size} height={(size * 18) / 16} shapeRendering="crispEdges" role="img" aria-label={awake ? 'BARDHIE mascot, awake' : 'BARDHIE mascot, asleep'}>
+    <svg viewBox="0 0 16 18" width={size} height={(size * 18) / 16} shapeRendering="crispEdges" role="img" aria-label={awake ? 'Bardy mascot, awake' : 'Bardy mascot, asleep'}>
       {rows.flatMap((row, y) =>
         [...row].map((key, x) => (PALETTE[key] ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={PALETTE[key]} /> : null))
       )}
@@ -1784,7 +1784,7 @@ const NAV: Array<{ screen: ScreenName; label: string; Icon: typeof Home }> = [
   { screen: 'quiz', label: 'Quiz', Icon: CircleHelp }
 ]
 
-const isMac = window.bardhie.platform === 'darwin'
+const isMac = window.bardy.platform === 'darwin'
 export const QUICK_ASK_KEYS = isMac ? '⌘ ⇧ Space' : 'Ctrl Shift Space'
 
 export function Sidebar(): React.JSX.Element {
@@ -1793,8 +1793,8 @@ export function Sidebar(): React.JSX.Element {
   return (
     <aside className="flex min-h-0 flex-col gap-5 overflow-y-auto border-r-2 border-border px-3 py-5">
       <div className="flex items-center justify-center gap-2 wide:justify-start wide:px-3">
-        <span className="font-display text-[28px] leading-none font-black tracking-[-0.02em] text-primary" aria-label="bardhie">
-          <span className="hidden wide:inline">bardhie</span>
+        <span className="font-display text-[28px] leading-none font-black tracking-[-0.02em] text-primary" aria-label="bardy">
+          <span className="hidden wide:inline">bardy</span>
           <span className="wide:hidden">b</span>
         </span>
       </div>
@@ -2156,7 +2156,7 @@ export function TodayScreen(): React.JSX.Element {
               resource={decks}
               loading={<div className="grid gap-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 rounded-card" />)}</div>}
               isEmpty={(list) => list.length === 0}
-              empty={<EmptyState title="No decks yet" body="Add a PDF to your library and BARDHIE turns it into flashcards and quizzes." action={<Button onClick={() => navigate({ screen: 'library' })}>Go to library</Button>} />}
+              empty={<EmptyState title="No decks yet" body="Add a PDF to your library and Bardy turns it into flashcards and quizzes." action={<Button onClick={() => navigate({ screen: 'library' })}>Go to library</Button>} />}
             >
               {(list) => (
                 <div className="grid gap-3">
@@ -2217,7 +2217,7 @@ export function TodayScreen(): React.JSX.Element {
 
           <Card className="bg-surface-2">
             <span className="text-[13px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">Tip</span>
-            <p className="text-[13px]">Press <Kbd>{QUICK_ASK_KEYS}</Kbd> to ask BARDHIE about your notes without leaving what you’re doing.</p>
+            <p className="text-[13px]">Press <Kbd>{QUICK_ASK_KEYS}</Kbd> to ask Bardy about your notes without leaving what you’re doing.</p>
           </Card>
         </div>
       </div>
@@ -2336,7 +2336,7 @@ export function LibraryScreen(): React.JSX.Element {
       <div className="grid justify-items-center gap-2.5 rounded-[20px] border-2 border-dashed border-border-strong bg-surface-2 p-7 text-center">
         <Upload {...ICON} size={44} className="text-primary" />
         <b className="text-lg">Drop a PDF here</b>
-        <p className="max-w-[52ch] text-[13px] text-fg-muted">Lecture slides, readings, or your own notes. BARDHIE reads them on this computer and makes a summary, flashcards, and quizzes.</p>
+        <p className="max-w-[52ch] text-[13px] text-fg-muted">Lecture slides, readings, or your own notes. Bardy reads them on this computer and makes a summary, flashcards, and quizzes.</p>
         <Button disabled title="PDF import arrives with the study engine">Choose file</Button>
         <span className="text-[12px] text-fg-faint">Importing PDFs arrives with the study engine.</span>
       </div>
@@ -2388,7 +2388,7 @@ function Bubble({ message }: { message: ChatMessage }): React.JSX.Element {
     <div className="max-w-[92%] justify-self-end rounded-2xl rounded-br-sm border-2 border-link/40 bg-link/15 px-3.5 py-3 text-[15px]">{message.text}</div>
   ) : (
     <div className="grid max-w-[92%] gap-2 justify-self-start rounded-2xl rounded-bl-sm border-2 border-border px-3.5 py-3 text-[15px]">
-      <span className="text-[12px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Bardhie</span>
+      <span className="text-[12px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Bardy</span>
       <p>{message.text}<Citations pages={message.citedPages} /></p>
     </div>
   )
@@ -2517,7 +2517,7 @@ function DocumentView({ doc }: { doc: StudyDocument }): React.JSX.Element {
           )}
         />
         {!summary ? (
-          <EmptyState awake={false} title="Still reading this PDF" body={`BARDHIE is on page ${doc.processing?.currentPage ?? 1} of ${doc.pageCount}. The summary and chat open when it’s done.`} action={<Button variant="secondary" onClick={() => navigate({ screen: 'library' })}>Back to library</Button>} />
+          <EmptyState awake={false} title="Still reading this PDF" body={`Bardy is on page ${doc.processing?.currentPage ?? 1} of ${doc.pageCount}. The summary and chat open when it’s done.`} action={<Button variant="secondary" onClick={() => navigate({ screen: 'library' })}>Back to library</Button>} />
         ) : (
           <>
             <Tabs<View> label="Document view" value={view} onChange={setView} items={[{ id: 'summary', label: 'Summary' }, { id: 'original', label: 'Original' }]} />
@@ -2558,7 +2558,7 @@ export function AskScreen(): React.JSX.Element {
       resource={documents}
       loading={<div className="grid gap-4 px-8 pt-7"><Skeleton className="h-16" /><Skeleton className="h-64 rounded-card" /></div>}
       isEmpty={(list) => list.length === 0}
-      empty={<div className="px-8"><EmptyState title="Nothing to ask about yet" body="Add a PDF to your library, then ask BARDHIE anything about it." action={<Button onClick={() => navigate({ screen: 'library' })}>Go to library</Button>} /></div>}
+      empty={<div className="px-8"><EmptyState title="Nothing to ask about yet" body="Add a PDF to your library, then ask Bardy anything about it." action={<Button onClick={() => navigate({ screen: 'library' })}>Go to library</Button>} /></div>}
     >
       {(list) => {
         const doc = list.find((d) => d.id === requestedId) ?? list.find((d) => d.summary !== null) ?? list[0]
@@ -3167,7 +3167,7 @@ export function QuickAsk({ open, onClose }: { open: boolean; onClose: () => void
         {error && <p role="alert" className="rounded-control bg-danger-wash px-3.5 py-2.5 text-[14px]">{error}</p>}
         {answer && !pending && (
           <div className="grid gap-2 rounded-2xl border-2 border-border px-3.5 py-3 text-[15px]" aria-live="polite">
-            <span className="text-[12px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Bardhie</span>
+            <span className="text-[12px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Bardy</span>
             <p>{answer.text} {answer.citedPages.map((p) => <span key={p} className="rounded-md border-2 border-link/50 px-1.5 py-0.5 text-[11px] font-extrabold text-link">p. {p}</span>)}</p>
           </div>
         )}
@@ -3213,7 +3213,7 @@ Read each Wave 2 agent's report. Apply any requested change to `ui/`, `shell/`, 
 
 - [ ] **Step 2: Document dev modes in `frontend/README.md`**
 
-Add a section after "Run BARDHIE on Windows":
+Add a section after "Run Bardy on Windows":
 
 ```markdown
 ## Preview loading and error states
@@ -3269,7 +3269,7 @@ Report: what was built, test and build output, remaining Minor findings, and tha
 ## Next tasks (after this plan)
 
 1. **Merge path:** open a PR from `feature/desktop` → `main` first (Phase 0), then `feature/desktop-ui` → `main`, so teammates create `backend/` on top of the new layout.
-2. **Backend integration:** when the FastAPI team publishes their endpoints, replace `data/index.ts`'s `createApi(...)` with a client that calls the main process through new narrow preload methods (`window.bardhie.study.*`), and the main process calls FastAPI on `localhost`. Screens stay unchanged; map field names in the data folder.
+2. **Backend integration:** when the FastAPI team publishes their endpoints, replace `data/index.ts`'s `createApi(...)` with a client that calls the main process through new narrow preload methods (`window.bardy.study.*`), and the main process calls FastAPI on `localhost`. Screens stay unchanged; map field names in the data folder.
 3. **Real PDF import:** a main-process file picker and drag-and-drop exposed through one preload method, replacing the disabled "Choose file" button.
 4. **Phase 1 desktop:** tray icon, system-wide Cmd/Ctrl+Shift+Space shortcut, and the floating always-on-top pet window that opens the main window, using the mascot team's final art in place of `ui/Mascot.tsx`.
 5. **Study progress persistence:** save card ratings, streaks, and goals (likely in the backend), replacing the display-only `RATING_HINTS`.

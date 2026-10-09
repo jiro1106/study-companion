@@ -52,7 +52,7 @@ export default function FloatingAssistant(): React.JSX.Element {
     refreshHealth()
 
     // Tell main process to resize to popup dimensions
-    window.bardhie.floating?.setMode('awake')
+    window.bardy.floating?.setMode('awake')
   }, [refreshHealth])
 
   const sleep = useCallback(() => {
@@ -62,11 +62,11 @@ export default function FloatingAssistant(): React.JSX.Element {
     setMascotState('sleeping')
 
     // Tell main process to resize to mascot-only dimensions
-    window.bardhie.floating?.setMode('sleeping')
+    window.bardy.floating?.setMode('sleeping')
   }, [abort])
 
   const maximize = useCallback(() => {
-    window.bardhie.floating?.maximize()
+    window.bardy.floating?.maximize()
   }, [])
 
   // ── Drag & Mascot Mouse Interactions ──────────────────
@@ -86,7 +86,7 @@ export default function FloatingAssistant(): React.JSX.Element {
         }
 
         if (hasDragged && (dx !== 0 || dy !== 0)) {
-          window.bardhie.floating?.move(dx, dy)
+          window.bardy.floating?.move(dx, dy)
           startX = moveEvt.screenX
           startY = moveEvt.screenY
         }
@@ -135,8 +135,8 @@ export default function FloatingAssistant(): React.JSX.Element {
         <button
           className="wake-pill-btn"
           onClick={wake}
-          title="Wake BARDHIE"
-          aria-label="Wake BARDHIE assistant"
+          title="Wake Bardy"
+          aria-label="Wake Bardy assistant"
         >
           <span className="wake-pill-dot" />
           <span>Wake</span>
@@ -195,7 +195,7 @@ export default function FloatingAssistant(): React.JSX.Element {
           </button>
           <button
             className="floating-btn floating-btn-close"
-            onClick={() => window.bardhie.floating?.hide()}
+            onClick={() => window.bardy.floating?.hide()}
             title="Hide mascot"
             aria-label="Hide mascot"
           >

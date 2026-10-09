@@ -1,6 +1,6 @@
-# BARDHIE
+# Bardy
 
-BARDHIE is an offline study companion for macOS and Windows: it reads your PDFs and turns them into summaries, flashcards, and quizzes with a local AI model.
+Bardy is an offline study companion for macOS and Windows: it reads your PDFs and turns them into summaries, flashcards, and quizzes with a local AI model.
 
 ## Repository layout
 

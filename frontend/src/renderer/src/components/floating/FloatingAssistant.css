@@ -741,6 +741,13 @@
   max-width: 92%;
 }
 
+.chat-chip,
+.quick-prompt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .chat-chip {
   background: rgba(88, 204, 2, 0.1);
   border: 1px solid rgba(165, 237, 110, 0.35);

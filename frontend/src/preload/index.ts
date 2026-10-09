@@ -10,7 +10,7 @@ const isFloating =
   typeof location !== "undefined" &&
   new URLSearchParams(location.search).has("floating");
 
-const bardhie: Window["bardhie"] = Object.freeze({
+const bardy: Window["bardy"] = Object.freeze({
   platform: process.platform,
 
   mascot: Object.freeze({
@@ -75,4 +75,4 @@ const bardhie: Window["bardhie"] = Object.freeze({
     : {}),
 });
 
-contextBridge.exposeInMainWorld("bardhie", bardhie);
+contextBridge.exposeInMainWorld("bardy", bardy);
