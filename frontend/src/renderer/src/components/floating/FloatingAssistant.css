@@ -155,7 +155,7 @@
   color: var(--color-primary-ink);
 }
 
-.floating-btn-minimize:hover {
+.floating-btn-close:hover {
   background: rgba(232, 57, 76, 0.18);
   color: #e8394c;
 }
