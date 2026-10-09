@@ -241,6 +241,7 @@ function Test-BlockedTitle([string]$title) {
   if ($title -match 'tiktok') { return $true }
   if ($title -match 'instagram') { return $true }
   if ($title -match 'messenger') { return $true }
+  if ($title -match 'youtube') { return $true }
   if ($title -match '\\btwitter\\b') { return $true }
   if ($title -match '\\bX\\s*[-–—|]\\s*(Google Chrome|Microsoft Edge|Firefox|Brave|Opera|Vivaldi|Mozilla Firefox)') { return $true }
   if ($title -match '/\\s*X(\\s*[-–—|]|\\s*$)') { return $true }
@@ -442,6 +443,7 @@ function detectSiteFromTitle(title: string): string | null {
   if (/tiktok/i.test(title)) return 'TikTok'
   if (/instagram/i.test(title)) return 'Instagram'
   if (/messenger/i.test(title)) return 'Messenger'
+  if (/youtube/i.test(title)) return 'YouTube'
   if (/\btwitter\b/i.test(title)) return 'Twitter / X'
   if (isBlockedBrowserTitle(title)) return 'Twitter / X'
   return null

@@ -5,6 +5,7 @@ import { ICON } from '../ui/icon'
 import { Kbd } from '../ui/Kbd'
 import { Mascot } from '../ui/Mascot'
 import { useNavigation, type ScreenName } from './navigation'
+import { FocusModeToggle } from './FocusModeToggle'
 import { MascotToggle } from './MascotToggle'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -53,6 +54,7 @@ export function Sidebar(): React.JSX.Element {
       </nav>
 
       <div className="mt-auto grid gap-3">
+        <FocusModeToggle />
         <MascotToggle />
         <button
           type="button"

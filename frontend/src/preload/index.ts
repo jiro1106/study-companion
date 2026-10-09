@@ -19,6 +19,20 @@ const bardhie: Window['bardhie'] = Object.freeze({
 
   importPDF: () => ipcRenderer.invoke('pdf:import'),
 
+  focus: Object.freeze({
+    getStatus: () => ipcRenderer.invoke('focus:status'),
+    set: (enable: boolean) => ipcRenderer.invoke('focus:set', enable),
+    onDistraction: (callback: (detail: { site: string; timestamp: number }) => void) => {
+      const listener = (_event: unknown, detail: { site: string; timestamp: number }): void => callback(detail)
+      ipcRenderer.on('focus:distraction-detected', listener)
+      return () => ipcRenderer.removeListener('focus:distraction-detected', listener)
+    },
+  }),
+
+  block: Object.freeze({
+    confirm: (targetDesc?: string) => ipcRenderer.invoke('block:confirm', targetDesc),
+  }),
+
   // Only expose the floating API in the floating window
   ...(isFloating
     ? {

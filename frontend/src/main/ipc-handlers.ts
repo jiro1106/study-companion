@@ -163,7 +163,7 @@ ipcMain.handle('block:confirm', async (_event, targetDesc?: string): Promise<boo
     type: 'question',
     title: 'Enable Focus Mode?',
     message: 'Block social media websites in browsers?',
-    detail: `BARDHIE will block access to ${targetDesc || 'Facebook, TikTok, Instagram, Messenger, and Twitter / X'} across all web browsers during your study session.\n\nAlready-open social media tabs will be closed so they cannot stay loaded. You do not need to close or restart your browser.\n\nA Windows administrator prompt may appear to update network protection. You can disable focus mode at any time.`,
+    detail: `BARDHIE will block access to ${targetDesc || 'Facebook, YouTube, Instagram, TikTok, Twitter / X, and Messenger'} across all web browsers during your study session.\n\nAlready-open tabs for these sites will be closed so they cannot stay loaded. You do not need to close or restart your browser.\n\nA Windows administrator prompt may appear to update network protection. You can disable focus mode at any time.`,
     buttons: ['Enable Focus Mode', 'Cancel'],
     defaultId: 0,
     cancelId: 1
