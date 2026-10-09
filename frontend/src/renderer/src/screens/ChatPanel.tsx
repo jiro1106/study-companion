@@ -102,7 +102,7 @@ export function ChatPanel({ documentId, documentTitle }: { documentId: string; d
           <input id="chat-input" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={`Ask a question about ${documentTitle}`} autoComplete="off" className="w-full min-w-0 rounded-control border-2 border-border bg-surface-2 px-3.5 py-3 text-base placeholder:text-fg-faint focus:border-link focus:bg-surface focus:outline-none" />
           <Button type="submit" disabled={pending !== null || !draft.trim()}>Ask</Button>
         </div>
-        <span className="text-[12px] text-fg-muted">Sample answers until the study engine is connected.</span>
+        <span className="text-[12px] text-fg-muted">Powered by local AI study companion (Ollama).</span>
       </form>
     </aside>
   )

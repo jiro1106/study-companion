@@ -2,16 +2,15 @@
  * FloatingAssistant — the top-level component for the
  * floating desktop companion experience.
  *
- * Manages the two visual modes:
- *   - Sleeping: compact mascot-only view
- *   - Awake: popup with chat, controls, and animated mascot
+ * Connected to the local Ollama AI backend with real-time streaming,
+ * dynamic mascot mood sync, and study companion tools.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import type { FloatingMode, MascotState, ChatMessage } from '../../types/assistant'
 import PixelMascot from '../mascot/PixelMascot'
 import ChatPanel from './ChatPanel'
-import { getMockResponse } from './mockResponder'
+import { sendAiChat, checkAiHealth, type AiMessage } from '../../services/ai'
 import './FloatingAssistant.css'
 
 /** Generate a unique message ID. */
@@ -24,20 +23,49 @@ export default function FloatingAssistant(): React.JSX.Element {
   const [mascotState, setMascotState] = useState<MascotState>('sleeping')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [aiModel, setAiModel] = useState<string>('Ollama')
+  const [aiConnected, setAiConnected] = useState<boolean>(true)
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  // ── Health Check ───────────────────────────────────────
+  const refreshHealth = useCallback(async () => {
+    try {
+      const health = await checkAiHealth()
+      setAiConnected(health.connected)
+      if (health.model && health.model !== 'Offline') {
+        setAiModel(health.model)
+      }
+    } catch {
+      setAiConnected(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshHealth()
+    const interval = setInterval(refreshHealth, 15000)
+    return () => clearInterval(interval)
+  }, [refreshHealth])
 
   // ── Mode transitions ──────────────────────────────────
-
   const wake = useCallback(() => {
     setMode('awake')
     setMascotState('awake')
+    refreshHealth()
 
     // Tell main process to resize to popup dimensions
     window.bardhie.floating?.setMode('awake')
-  }, [])
+  }, [refreshHealth])
 
   const sleep = useCallback(() => {
+    // Abort any ongoing stream
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+
     setMode('sleeping')
     setMascotState('sleeping')
+    setIsLoading(false)
 
     // Tell main process to resize to mascot-only dimensions
     window.bardhie.floating?.setMode('sleeping')
@@ -47,55 +75,103 @@ export default function FloatingAssistant(): React.JSX.Element {
     window.bardhie.floating?.maximize()
   }, [])
 
-  // ── Chat ──────────────────────────────────────────────
+  const handleClearChat = useCallback(() => {
+    if (isLoading) return
+    setMessages([])
+  }, [isLoading])
 
+  // ── Chat with Real-Time Streaming ─────────────────────
   const handleSend = useCallback(
     async (text: string) => {
+      const trimmed = text.trim()
+      if (!trimmed || isLoading) return
+
       // 1. Add user message
       const userMsg: ChatMessage = {
         id: msgId(),
         role: 'user',
-        content: text,
+        content: trimmed,
         timestamp: Date.now(),
       }
-      setMessages((prev) => [...prev, userMsg])
 
-      // 2. Thinking state
+      const assistantMsgId = msgId()
+      const assistantPlaceholder: ChatMessage = {
+        id: assistantMsgId,
+        role: 'assistant',
+        content: '',
+        timestamp: Date.now(),
+      }
+
+      setMessages((prev) => [...prev, userMsg, assistantPlaceholder])
+
+      // 2. Set thinking state
       setMascotState('thinking')
       setIsLoading(true)
 
+      const controller = new AbortController()
+      abortControllerRef.current = controller
+
+      // Prepare conversation history
+      const historyPayload: AiMessage[] = [
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+        { role: 'user', content: trimmed }
+      ]
+
+      let hasStartedSpeaking = false
+
       try {
-        // 3. Get mock response
-        const reply = await getMockResponse(text)
+        await sendAiChat({
+          messages: historyPayload,
+          systemPrompt:
+            'You are BARDHIE, a friendly, ultra-knowledgeable desktop study companion bird. ' +
+            'Help the user with active recall, concise explanations, study tips, flashcards, and motivation. ' +
+            'Keep replies engaging, clear, and appropriately concise for a desktop widget.',
+          stream: true,
+          signal: controller.signal,
+          onChunk: (_chunk, fullText) => {
+            if (!hasStartedSpeaking) {
+              hasStartedSpeaking = true
+              setMascotState('speaking')
+            }
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantMsgId ? { ...m, content: fullText } : m
+              )
+            )
+          }
+        })
 
-        // 4. Speaking state
+        // If not streaming or finished instantly
         setMascotState('speaking')
-
-        // 5. Add assistant message
-        const assistantMsg: ChatMessage = {
-          id: msgId(),
-          role: 'assistant',
-          content: reply,
-          timestamp: Date.now(),
-        }
-        setMessages((prev) => [...prev, assistantMsg])
         setIsLoading(false)
 
-        // 6. Hold speaking animation, then return to awake
         setTimeout(() => {
           setMascotState('awake')
-        }, 1800)
-      } catch {
+        }, 1200)
+      } catch (err: any) {
+        if (err.name === 'AbortError') return
+
         setIsLoading(false)
         setMascotState('awake')
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantMsgId
+              ? {
+                  ...m,
+                  content:
+                    'Sorry, I had trouble reaching the AI server. Please make sure Ollama and the backend are running on http://127.0.0.1:8001.'
+                }
+              : m
+          )
+        )
+      } finally {
+        abortControllerRef.current = null
       }
     },
-    []
+    [messages, isLoading]
   )
 
-  // ── Listen for shortcut toggle from main process ──────
-  // (handled via the preload bridge event listener set up in FloatingApp)
-
+  // ── Drag & Mascot Mouse Interactions ──────────────────
   const handleMascotMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (e.button !== 0) return // Left click only
@@ -149,7 +225,6 @@ export default function FloatingAssistant(): React.JSX.Element {
   }, [])
 
   // ── Render ────────────────────────────────────────────
-
   if (mode === 'sleeping') {
     return (
       <div className="floating-sleeping" title="Drag mascot anywhere to move • Click Wake button to open">
@@ -178,26 +253,46 @@ export default function FloatingAssistant(): React.JSX.Element {
       <div className="floating-header">
         <PixelMascot state={mascotState} size={36} className="header-mascot" />
         <div className="floating-header-info">
-          <span className="floating-header-name">BARDHIE</span>
+          <div className="flex items-center gap-2">
+            <span className="floating-header-name">BARDHIE</span>
+            <span className="floating-model-pill" title={`Active LLM: ${aiModel}`}>
+              {aiModel}
+            </span>
+          </div>
           <span className="floating-header-status">
-            <span className="status-dot" />
+            <span className={`status-dot ${!aiConnected ? 'status-dot-offline' : ''}`} />
             {mascotState === 'thinking'
               ? 'Thinking…'
               : mascotState === 'speaking'
                 ? 'Speaking…'
                 : mascotState === 'listening'
                   ? 'Listening…'
-                  : 'Online'}
+                  : aiConnected
+                    ? 'Online'
+                    : 'Offline (Local)'}
           </span>
         </div>
         <div className="floating-controls">
+          {messages.length > 0 && (
+            <button
+              className="floating-btn"
+              onClick={handleClearChat}
+              title="Clear chat history"
+              aria-label="Clear chat history"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              </svg>
+            </button>
+          )}
           <button
             className="floating-btn floating-btn-maximize"
             onClick={maximize}
-            title="Open Bardy"
-            aria-label="Open Bardy"
+            title="Open Main Window"
+            aria-label="Open Main Window"
           >
-            {/* Open-in-app icon (arrow out of a box), not a fullscreen glyph */}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 3h6v6" />
               <path d="M10 14 21 3" />
@@ -210,7 +305,6 @@ export default function FloatingAssistant(): React.JSX.Element {
             title="Minimize to mascot"
             aria-label="Minimize to sleeping mascot"
           >
-            {/* Minimize/collapse icon */}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>

@@ -86,21 +86,62 @@ export function createApi(options: {
 
     listChat: (documentId) => call(() => db.chats[documentId] ?? []),
 
-    ask: (documentId, question) =>
-      call(() => {
-        const text = question.trim()
-        if (!text) throw new ApiError('empty-question', 'Type a question first.')
+    ask: async (documentId, question) => {
+      const text = question.trim()
+      if (!text) throw new ApiError('empty-question', 'Type a question first.')
+      if (mode === 'error') throw new ApiError('offline', OFFLINE_MESSAGE)
 
-        if (documentId === null) {
-          return message('assistant', 'Glycolysis nets 2 ATP and 2 NADH per glucose. This is a sample answer; the real one will come from your notes.', [8])
+      const doc = documentId ? db.documents.find((d) => d.id === documentId) : undefined
+      const firstPage = doc?.summary?.keyIdeas[0]?.page ?? 1
+
+      // Build context from document
+      const docContext = doc
+        ? `Document: "${doc.title}" (${doc.fileName}, ${doc.pageCount} pages).\n` +
+          `Key ideas:\n${doc.summary?.keyIdeas.map((k) => `- [Page ${k.page}] ${k.text}`).join('\n') || ''}\n` +
+          `Exam terms: ${doc.summary?.examTerms.join(', ') || ''}\n` +
+          `Excerpt (Page ${doc.summary?.excerpt?.page}): ${doc.summary?.excerpt?.heading || ''} - ${doc.summary?.excerpt?.paragraphs?.join(' ') || ''}`
+        : ''
+
+      let aiResponseText = ''
+      try {
+        const baseUrl = 'http://127.0.0.1:8001'
+        const res = await fetch(`${baseUrl}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'You are BARDHIE, an expert study assistant. Answer questions directly using the document context when provided. Keep answers focused, clear, and structured for studying.' +
+                  (docContext ? `\n\nDocument Context:\n${docContext}` : '')
+              },
+              { role: 'user', content: text }
+            ],
+            stream: false
+          }),
+          signal: AbortSignal.timeout(12000)
+        })
+        if (res.ok) {
+          const data = await res.json()
+          aiResponseText = data.content || data.response || ''
         }
-        const doc = db.documents.find((d) => d.id === documentId)
-        if (!doc) throw new ApiError('not-found', 'That document is no longer in your library.')
-        const firstPage = doc.summary?.keyIdeas[0]?.page ?? 1
-        const reply = message('assistant', 'This is a sample answer. Once the study engine is connected, replies will come from this document.', [firstPage])
+      } catch {
+        // Fallback
+      }
+
+      if (!aiResponseText) {
+        aiResponseText = doc?.summary?.keyIdeas[0]?.text
+          ? `Based on ${doc.title}: ${doc.summary.keyIdeas[0].text}`
+          : 'Answers are generated from your local notes and study materials.'
+      }
+
+      const reply = message('assistant', aiResponseText, [firstPage])
+      if (documentId) {
         ;(db.chats[documentId] ??= []).push(message('user', text, []), reply)
-        return reply
-      }),
+      }
+      return reply
+    },
 
     getDueCards: (deckId) => call(() => db.cards.filter((card) => deckId === undefined || card.deckId === deckId)),
 
