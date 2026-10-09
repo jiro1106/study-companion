@@ -1,5 +1,5 @@
 import { Trash2, Upload } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { api, toApiError, type StudyDocument } from '../data'
 import { useResource } from '../data/use-resource'
@@ -65,6 +65,30 @@ export function LibraryScreen(): React.JSX.Element {
   const { navigate } = useNavigation()
   const documents = useResource<StudyDocument[]>(() => api.listDocuments(), [])
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [importing, setImporting] = useState(false)
+
+  // Poll while any document is still processing
+  useEffect(() => {
+    if (documents.status !== 'ready') return
+    const anyProcessing = documents.data.some((d) => d.processing !== null)
+    if (!anyProcessing) return
+    const id = setInterval(() => documents.reload(), 1000)
+    return () => clearInterval(id)
+  }, [documents])
+
+  async function handleImport(): Promise<void> {
+    setImportError(null)
+    setImporting(true)
+    try {
+      const id = await api.importDocument()
+      if (id !== null) documents.reload()
+    } catch (e) {
+      setImportError(toApiError(e).message)
+    } finally {
+      setImporting(false)
+    }
+  }
 
   async function deleteDocument(id: string): Promise<void> {
     setDeleteError(null)
@@ -84,10 +108,13 @@ export function LibraryScreen(): React.JSX.Element {
         <Upload {...ICON} size={44} className="text-primary" />
         <b className="text-lg">Drop a PDF here</b>
         <p className="max-w-[52ch] text-[13px] text-fg-muted">Lecture slides, readings, or your own notes. Bardy reads them on this computer and makes a summary, flashcards, and quizzes.</p>
-        <Button disabled title="PDF import arrives with the study engine">Choose file</Button>
-        <span className="text-[12px] text-fg-faint">Importing PDFs arrives with the study engine.</span>
+        <Button disabled={importing} onClick={handleImport}>
+          {importing ? 'Opening…' : 'Choose file'}
+        </Button>
+        {importError && <p role="alert" className="text-[13px] text-danger">{importError}</p>}
       </div>
       {deleteError && <p role="alert" className="rounded-control bg-danger-wash px-3.5 py-2.5 text-[14px]">{deleteError}</p>}
+
       <ResourceView
         resource={documents}
         loading={<div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-52 rounded-card" />)}</div>}

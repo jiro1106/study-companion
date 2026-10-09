@@ -4,6 +4,8 @@ import { app, BrowserWindow, dialog, type MessageBoxOptions, globalShortcut, ipc
 
 import { windowOptions } from './window-options'
 import { fitToDisplays, parseWindowState, serializeWindowState, type WindowState } from './window-state'
+import { cleanupFocusModeSync, isFocusModeActive } from './focus-blocker'
+import './ipc-handlers'
 
 let mainWindow: BrowserWindow | null = null
 let floatingWindow: BrowserWindow | null = null
@@ -328,6 +330,10 @@ let confirmingQuit = false
 
 function quitNow(): void {
   quitConfirmed = true
+  // Only touch the hosts file (and risk a UAC prompt) if focus mode is actually on.
+  void isFocusModeActive().then((active) => {
+    if (active) cleanupFocusModeSync()
+  })
   app.quit()
 }
 

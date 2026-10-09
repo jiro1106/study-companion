@@ -7,13 +7,15 @@ Create flashcards following these principles:
 4. Keep answers brief but complete — 1-3 sentences maximum
 5. Include key vocabulary, definitions, formulas, and important concepts
 6. Use simple, precise language
+7. If the source material contains "[Page N]" markers, set "page" to the page each card is based on; otherwise use 1
 
 Respond in JSON format:
 {
   "flashcards": [
     {
       "front": "Question or prompt",
-      "back": "Concise answer"
+      "back": "Concise answer",
+      "page": 1
     }
   ]
 }
