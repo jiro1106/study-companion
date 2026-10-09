@@ -4,13 +4,16 @@ import { useEffect, useState } from 'react'
 import { api, type QuizQuestion } from '../data'
 import { useResource } from '../data/use-resource'
 import { useNavigation } from '../shell/navigation'
+import { useStudyTimer } from '../study/use-study-timer'
 import { check, isFinished, next, select, startQuiz, type QuizSession } from '../study/quiz-session'
 import { Button } from '../ui/Button'
 import { EmptyState } from '../ui/EmptyState'
 import { ICON } from '../ui/icon'
+import { Pill } from '../ui/Pill'
 import { ProgressBar } from '../ui/ProgressBar'
 import { ResourceView } from '../ui/ResourceView'
 import { Skeleton } from '../ui/Skeleton'
+import { StudyTime } from '../ui/StudyTime'
 
 function optionClass(session: QuizSession, i: number, correctIndex: number): string {
   if (session.checked && i === correctIndex) return 'border-success bg-success-wash'
@@ -23,6 +26,7 @@ function Quiz({ questions }: { questions: QuizQuestion[] }): React.JSX.Element {
   const { navigate } = useNavigation()
   const [session, setSession] = useState(() => startQuiz(questions.length))
   const question = questions[session.index]
+  const timer = useStudyTimer(!!question)
   const right = session.checked && question && session.selected === question.correctIndex
 
   function advance(): void {
@@ -58,7 +62,9 @@ function Quiz({ questions }: { questions: QuizQuestion[] }): React.JSX.Element {
       <div className="flex items-center gap-4 px-8 py-5">
         <button type="button" onClick={() => navigate({ screen: 'today' })} aria-label="End quiz" className="cursor-pointer p-1 text-fg-faint hover:text-fg-muted"><X {...ICON} size={26} /></button>
         <div className="flex-1"><ProgressBar size="lg" value={session.index / session.total} label="Quiz progress" /></div>
+        {timer.goalReached && <Pill tone="ok">Daily goal reached</Pill>}
         <b className="tabular-nums">{session.index + 1} / {session.total}</b>
+        <StudyTime timer={timer} />
       </div>
 
       <div className="grid place-items-center overflow-y-auto px-8 pt-3 pb-8">

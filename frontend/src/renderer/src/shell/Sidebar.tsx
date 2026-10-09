@@ -81,7 +81,7 @@ export function Sidebar({
             aria-label={label}
             aria-current={route.screen === screen ? 'page' : undefined}
             onClick={() => navigate({ screen })}
-            className={`flex w-full cursor-pointer items-center gap-3.5 rounded-control border-2 border-transparent py-2.5 ${compact ? 'px-0' : 'px-3'} text-sm font-extrabold tracking-[0.053em] text-fg-muted uppercase hover:bg-surface-2 aria-[current=page]:border-link/55 aria-[current=page]:bg-link/10 aria-[current=page]:text-link ${compact ? 'justify-center' : ''}`}
+            className={`flex w-full cursor-pointer items-center gap-3.5 rounded-control border-2 border-transparent py-2.5 ${compact ? 'px-0' : 'px-3'} text-sm font-extrabold text-fg-muted hover:bg-surface-2 aria-[current=page]:border-link/55 aria-[current=page]:bg-link/10 aria-[current=page]:text-link ${compact ? 'justify-center' : ''}`}
           >
             <Icon {...ICON} size={24} className="shrink-0" />
             {!compact && <span className="truncate">{label}</span>}
@@ -106,7 +106,7 @@ export function Sidebar({
           onClick={openQuickAsk}
           title={`Quick ask (${QUICK_ASK_KEYS})`}
           aria-label="Quick ask"
-          className={`flex cursor-pointer flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-control border-2 border-b-4 border-border bg-surface py-2.5 text-sm font-extrabold tracking-[0.053em] whitespace-nowrap text-link uppercase ${compact ? 'px-0' : 'px-3'}`}
+          className={`flex cursor-pointer flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-control border-2 border-b-4 border-border bg-surface py-2.5 text-sm font-extrabold whitespace-nowrap text-link ${compact ? 'px-0' : 'px-3'}`}
         >
           <Search {...ICON} size={18} />
           {!compact && <span>Quick ask</span>}

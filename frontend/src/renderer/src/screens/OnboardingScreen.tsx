@@ -166,12 +166,15 @@ export function GoalPicker({
   onChange: (minutes: number) => void
 }): React.JSX.Element {
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {GOALS.map((minutes) => (
-        <Choice key={minutes} selected={value === minutes} onClick={() => onChange(minutes)}>
-          <span className="w-full text-center">{minutes} min</span>
-        </Choice>
-      ))}
+    <div className="grid gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {GOALS.map((minutes) => (
+          <Choice key={minutes} selected={value === minutes} onClick={() => onChange(minutes)}>
+            <span className="w-full text-center">{minutes} min</span>
+          </Choice>
+        ))}
+      </div>
+      <p className="text-[13px] text-fg-muted">Counts time spent in flashcards and quizzes.</p>
     </div>
   )
 }

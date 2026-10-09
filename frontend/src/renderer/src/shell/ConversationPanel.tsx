@@ -5,7 +5,7 @@ import ChatPanel from '../components/floating/ChatPanel'
 import { useSharedChat } from '../components/floating/useSharedChat'
 import '../components/floating/FloatingAssistant.css'
 import { ICON } from '../ui/icon'
-import { chatWidthForPointer, clampChatWidth } from './conversation-panel'
+import { chatDefaultWidth, chatWidthForPointer, clampChatWidth } from './conversation-panel'
 
 /**
  * Expanding conversation drawer on the right of the main window. It uses the same
@@ -16,16 +16,23 @@ export function ConversationPanel({ open, onToggle }: { open: boolean; onToggle:
   const [width, setWidth] = useState(() => {
     try {
       const savedWidth = Number(localStorage.getItem('bardy:chat-w'))
-      return clampChatWidth(Number.isFinite(savedWidth) ? savedWidth : 380, window.innerWidth)
+      return clampChatWidth(savedWidth > 0 ? savedWidth : chatDefaultWidth(window.innerWidth), window.innerWidth)
     } catch {
-      return 380
+      return chatDefaultWidth(window.innerWidth)
     }
   })
   const [dragging, setDragging] = useState(false)
 
   useEffect(() => {
-    if (!open) setWidth(clampChatWidth(380, window.innerWidth))
+    if (!open) setWidth(chatDefaultWidth(window.innerWidth))
   }, [open])
+
+  // Keep the width inside its viewport-relative bounds when the window resizes.
+  useEffect(() => {
+    const onResize = (): void => setWidth((w) => clampChatWidth(w, window.innerWidth))
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   const startDrag = (event: React.PointerEvent<HTMLDivElement>): void => {
     event.currentTarget.setPointerCapture(event.pointerId)

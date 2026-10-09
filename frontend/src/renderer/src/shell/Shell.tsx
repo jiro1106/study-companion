@@ -9,22 +9,24 @@ import { NavigationProvider, useNavigation } from './navigation'
 import { ConversationPanel } from './ConversationPanel'
 import { QuickAsk } from './QuickAsk'
 import { Sidebar } from './Sidebar'
+import { CHAT_MIN_WIDTH } from './conversation-panel'
 import {
-  SIDEBAR_DEFAULT_WIDTH,
-  SIDEBAR_MAX_WIDTH,
+  CONTENT_MIN_WIDTH,
   SIDEBAR_MIN_WIDTH,
   SIDEBAR_RAIL_WIDTH,
+  sidebarDefaultWidth,
+  sidebarMaxWidth,
   sidebarWidthAfterToggle
 } from './sidebar-width'
 
 function loadSidebarWidth(): number {
   try {
     const n = Number(localStorage.getItem('bardy:sidebar-w'))
-    if (n >= SIDEBAR_RAIL_WIDTH && n <= SIDEBAR_MAX_WIDTH) return n
+    if (n >= SIDEBAR_RAIL_WIDTH && n <= sidebarMaxWidth(window.innerWidth)) return n
   } catch {
     // fall through to default
   }
-  return SIDEBAR_DEFAULT_WIDTH
+  return sidebarDefaultWidth(window.innerWidth)
 }
 
 function CurrentScreen(): React.JSX.Element {
@@ -66,7 +68,16 @@ export function Shell(): React.JSX.Element {
 
   const [sbWidth, setSbWidth] = useState(loadSidebarWidth)
   const [dragging, setDragging] = useState(false)
-  const compact = sbWidth <= SIDEBAR_RAIL_WIDTH
+  const [vw, setVw] = useState(() => window.innerWidth)
+  useEffect(() => {
+    const onResize = (): void => setVw(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  // With the chat open, fold the sidebar to its rail rather than squeeze the content column.
+  const squeezed = chatOpen && vw - sbWidth - CHAT_MIN_WIDTH < CONTENT_MIN_WIDTH
+  const shownWidth = Math.min(sbWidth, squeezed ? SIDEBAR_RAIL_WIDTH : sidebarMaxWidth(vw))
+  const compact = shownWidth <= SIDEBAR_RAIL_WIDTH
   const saveWidth = (w: number): void => {
     try {
       localStorage.setItem('bardy:sidebar-w', String(w))
@@ -76,7 +87,7 @@ export function Shell(): React.JSX.Element {
   }
   const toggleSidebar = useCallback(() => {
     setSbWidth((w) => {
-      const next = sidebarWidthAfterToggle(w)
+      const next = sidebarWidthAfterToggle(w, window.innerWidth)
       saveWidth(next)
       return next
     })
@@ -92,7 +103,7 @@ export function Shell(): React.JSX.Element {
     setSbWidth(
       x < SIDEBAR_MIN_WIDTH - 40
         ? SIDEBAR_RAIL_WIDTH
-        : Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, x))
+        : Math.min(sidebarMaxWidth(window.innerWidth), Math.max(SIDEBAR_MIN_WIDTH, x))
     )
   }
   const endDrag = (): void => {
@@ -123,7 +134,7 @@ export function Shell(): React.JSX.Element {
         <div
           className="grid min-w-0 flex-1"
           style={{
-            gridTemplateColumns: `${sbWidth}px minmax(0,1fr)`,
+            gridTemplateColumns: `${shownWidth}px minmax(0,1fr)`,
             transition: dragging ? 'none' : 'grid-template-columns 150ms ease-out'
           }}
         >

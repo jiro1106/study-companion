@@ -4,20 +4,23 @@ import { useEffect, useState } from 'react'
 import { api, type Flashcard } from '../data'
 import { useResource } from '../data/use-resource'
 import { useNavigation } from '../shell/navigation'
-import { RATINGS, RATING_HINTS, currentCardId, flip, isComplete, progress, rate, startSession, type FlashcardSession, type Rating } from '../study/flashcard-session'
+import { useStudyTimer } from '../study/use-study-timer'
+import { RATINGS, currentCardId, flip, isComplete, progress, rate, startSession, type FlashcardSession, type Rating } from '../study/flashcard-session'
 import { Button } from '../ui/Button'
 import { EmptyState } from '../ui/EmptyState'
 import { ICON } from '../ui/icon'
 import { Kbd } from '../ui/Kbd'
+import { Pill } from '../ui/Pill'
 import { ProgressBar } from '../ui/ProgressBar'
 import { ResourceView } from '../ui/ResourceView'
 import { Skeleton } from '../ui/Skeleton'
+import { StudyTime } from '../ui/StudyTime'
 
-const RATING_STYLE: Record<Rating, { variant: 'secondary' | 'primary'; className: string; label: string }> = {
-  again: { variant: 'secondary', className: 'text-danger', label: 'Again' },
-  hard: { variant: 'secondary', className: 'text-fg-muted', label: 'Hard' },
-  good: { variant: 'secondary', className: '', label: 'Good' },
-  easy: { variant: 'primary', className: '', label: 'Easy' }
+const RATING_STYLE: Record<Rating, { className: string; label: string }> = {
+  again: { className: 'text-danger', label: 'Forgot' },
+  hard: { className: 'text-fg-muted', label: 'Hard' },
+  good: { className: 'text-fg', label: 'Good' },
+  easy: { className: 'text-success', label: 'Easy' }
 }
 
 const FACE = 'col-start-1 row-start-1 grid content-center justify-items-center gap-3.5 rounded-3xl border-2 border-b-[6px] border-border bg-surface px-7 py-10 text-center backface-hidden'
@@ -34,6 +37,7 @@ function Session({ cards }: { cards: Flashcard[] }): React.JSX.Element {
   const { navigate } = useNavigation()
   const [session, setSession] = useState<FlashcardSession>(() => startSession(cards.map((c) => c.id)))
   const card = cards.find((c) => c.id === currentCardId(session))
+  const timer = useStudyTimer(!isComplete(session))
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent): void {
@@ -55,7 +59,9 @@ function Session({ cards }: { cards: Flashcard[] }): React.JSX.Element {
       <div className="flex items-center gap-4 px-8 py-5">
         <button type="button" onClick={() => navigate({ screen: 'today' })} aria-label="End session" className="cursor-pointer p-1 text-fg-faint hover:text-fg-muted"><X {...ICON} size={26} /></button>
         <div className="flex-1"><ProgressBar size="lg" value={progress(session)} label="Session progress" /></div>
+        {timer.goalReached && <Pill tone="ok">Daily goal reached</Pill>}
         <b className="text-streak tabular-nums">{session.reviewed} / {session.total}</b>
+        <StudyTime timer={timer} />
       </div>
 
       <div className="grid place-items-center overflow-y-auto px-8 pt-3 pb-8">
@@ -68,23 +74,25 @@ function Session({ cards }: { cards: Flashcard[] }): React.JSX.Element {
               <span className={`grid transform-3d transition-transform duration-500 ease-out ${session.flipped ? 'rotate-y-180' : ''}`}>
                 <span aria-hidden={session.flipped} className={`${FACE} font-display text-[34px] leading-tight font-black`}>
                   {card.term}
-                  <span className="font-body text-[12px] font-extrabold tracking-[0.053em] text-link uppercase">Click or press Space to flip</span>
+                  <span className="inline-flex items-center font-body text-[13px] font-bold text-link">Click or press <Kbd>Space</Kbd> to flip</span>
                 </span>
                 <span aria-hidden={!session.flipped} className={`${FACE} rotate-y-180`}>
                   <span className="font-display text-[34px] leading-tight font-black">{card.term}</span>
                   <span className="max-w-[40ch] text-lg text-fg-muted">{card.definition}</span>
-                  <span className="text-[12px] font-extrabold tracking-[0.053em] text-link uppercase">Rate how well you knew it</span>
                 </span>
               </span>
             </button>
             {session.flipped && (
-              <div className="grid grid-cols-2 gap-2.5 @min-[860px]:grid-cols-4">
-                {RATINGS.map((rating, i) => (
-                  <Button key={rating} variant={RATING_STYLE[rating].variant} className={`flex-col gap-1.5 ${RATING_STYLE[rating].className}`} onClick={() => setSession((s) => rate(s, rating))}>
-                    {RATING_STYLE[rating].label}
-                    <small className="text-[11px] font-bold tracking-normal normal-case opacity-80">{i + 1} · {RATING_HINTS[rating]}</small>
-                  </Button>
-                ))}
+              <div className="grid gap-3">
+                <p className="text-center text-[15px] font-bold text-fg-muted">How well did you know it?</p>
+                <div className="grid grid-cols-2 gap-2.5 @min-[860px]:grid-cols-4">
+                  {RATINGS.map((rating, i) => (
+                    <Button key={rating} variant="secondary" className={`flex-col gap-2 ${RATING_STYLE[rating].className}`} onClick={() => setSession((s) => rate(s, rating))}>
+                      {RATING_STYLE[rating].label}
+                      <Kbd>{i + 1}</Kbd>
+                    </Button>
+                  ))}
+                </div>
               </div>
             )}
             <p className="text-center text-[13px] text-fg-muted">From page {card.sourcePage}</p>

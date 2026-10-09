@@ -7,6 +7,7 @@ import { useResource } from '../data/use-resource'
 import { PAGE } from '../ui/page'
 import { QUICK_ASK_KEYS } from '../shell/Sidebar'
 import { useNavigation } from '../shell/navigation'
+import { loadStudyLog, minutesOn, streakDays, weekProgress } from '../study/study-log'
 import { Button } from '../ui/Button'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { Card } from '../ui/Card'
@@ -41,7 +42,7 @@ function greeting(now: Date): string {
 function GoalRing({ value }: { value: number }): React.JSX.Element {
   const circumference = 2 * Math.PI * 44
   return (
-    <svg viewBox="0 0 108 108" className="size-[108px] shrink-0" role="img" aria-label={`${Math.round(value * 100)}% of daily goal`}>
+    <svg viewBox="0 0 108 108" className="size-[92px] shrink-0" role="img" aria-label={`${Math.round(value * 100)}% of daily goal`}>
       <circle cx="54" cy="54" r="44" fill="none" stroke="var(--surface)" strokeWidth="12" />
       <circle cx="54" cy="54" r="44" fill="none" stroke="var(--primary)" strokeWidth="12" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - value)} transform="rotate(-90 54 54)" />
       <text x="54" y="61" textAnchor="middle" fill="var(--fg)" className="font-display text-[20px] font-black">{Math.round(value * 100)}%</text>
@@ -85,10 +86,15 @@ function DeckRow({ deck, onOpen, onDelete }: { deck: Deck; onOpen: () => void; o
 export function TodayScreen(): React.JSX.Element {
   const { navigate } = useNavigation()
   const { profile } = useProfile()
-  const today = useResource<TodayStats>(() => api.getToday(), [])
+  const todayApi = useResource<TodayStats>(() => api.getToday(), [])
+  // Study time, streak and the week come from the local study log, not the mock API.
+  const now = new Date()
+  const log = loadStudyLog()
+  const today = todayApi.status === 'ready'
+    ? { ...todayApi, data: { ...todayApi.data, minutesToday: minutesOn(log, now), streakDays: streakDays(log, profile.goalMinutes, now), ...weekProgress(log, profile.goalMinutes, now) } }
+    : todayApi
   const decks = useResource<Deck[]>(() => api.listDecks(), [])
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  const now = new Date()
 
   if (today.status === 'error') {
     return (
@@ -127,18 +133,18 @@ export function TodayScreen(): React.JSX.Element {
           <ResourceView resource={today} loading={<Skeleton className="h-40 rounded-[20px]" />}>
             {(stats) => (
               <>
-                <div className="grid items-center gap-5 rounded-[20px] border-2 border-b-[6px] border-primary bg-primary-wash p-6 @min-[860px]:grid-cols-[1fr_auto]">
-                  <div className="grid gap-3">
-                    <span className="text-[13px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Daily goal · {profile.goalMinutes} min</span>
-                    <h2 className="font-display text-[26px] leading-tight font-black text-fg">
-                      {stats.minutesToday >= profile.goalMinutes ? 'Goal reached. Nice work!' : `${stats.minutesToday} of ${profile.goalMinutes} minutes done. One more review gets you there.`}
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[20px] border-2 border-b-[6px] border-primary bg-primary-wash p-5">
+                  <GoalRing value={Math.min(1, stats.minutesToday / profile.goalMinutes)} />
+                  <div className="grid min-w-[220px] flex-1 gap-3">
+                    <span className="text-[13px] font-extrabold text-primary-ink">Daily goal · {profile.goalMinutes} min</span>
+                    <h2 className="font-display text-[22px] leading-tight font-black text-fg">
+                      {stats.minutesToday >= profile.goalMinutes ? 'Goal reached. Nice work!' : `${Math.floor(stats.minutesToday)} of ${profile.goalMinutes} minutes done. ${Math.ceil(profile.goalMinutes - stats.minutesToday)} more to go.`}
                     </h2>
                     <div className="flex flex-wrap gap-3">
                       <Button disabled={stats.dueCount === 0} onClick={() => navigate({ screen: 'cards' })}>{stats.dueCount > 0 ? `Review ${stats.dueCount} cards` : 'No cards due'}</Button>
                       <Button variant="ghost" onClick={() => navigate({ screen: 'quiz' })}>Take a quiz</Button>
                     </div>
                   </div>
-                  <GoalRing value={Math.min(1, stats.minutesToday / profile.goalMinutes)} />
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {[
@@ -152,7 +158,7 @@ export function TodayScreen(): React.JSX.Element {
                       </span>
                       <div className="grid min-w-0 gap-0.5">
                         <b className="font-display text-[28px] leading-none font-black tabular-nums">{tile.value}</b>
-                        <span className="truncate text-[11px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">{tile.label}</span>
+                        <span className="truncate text-[11px] font-extrabold text-fg-muted">{tile.label}</span>
                       </div>
                     </div>
                   ))}
@@ -163,7 +169,7 @@ export function TodayScreen(): React.JSX.Element {
 
           <section className="grid gap-3" aria-labelledby="decks-heading">
             <div className="flex items-center justify-between">
-              <h2 id="decks-heading" className="text-[13px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">Your decks</h2>
+              <h2 id="decks-heading" className="text-[13px] font-extrabold text-fg-muted">Your decks</h2>
               <Button variant="ghost" className="px-1 py-1" onClick={() => navigate({ screen: 'library' })}>See library</Button>
             </div>
             {deleteError && <p role="alert" className="rounded-control bg-danger-wash px-3.5 py-2.5 text-[14px]">{deleteError}</p>}
@@ -188,7 +194,7 @@ export function TodayScreen(): React.JSX.Element {
           <ResourceView resource={today} loading={<Skeleton className="h-32 rounded-card" />}>
             {(stats) => (
               <Card>
-                <span className="text-[13px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">This week</span>
+                <span className="text-[13px] font-extrabold text-fg-muted">This week</span>
                 <ol className="grid grid-cols-7 gap-1.5 text-center">
                   {stats.weekDone.map((done, i) => (
                     <li key={i} className="grid justify-items-center gap-1.5 text-[11px] font-extrabold text-fg-muted">
@@ -199,13 +205,13 @@ export function TodayScreen(): React.JSX.Element {
                     </li>
                   ))}
                 </ol>
-                <p className="text-[13px] text-fg-muted">Finish today’s goal to keep your {stats.streakDays}-day streak.</p>
+                <p className="text-[13px] text-fg-muted">{stats.minutesToday >= profile.goalMinutes ? `Goal met. Your streak is ${stats.streakDays} ${stats.streakDays === 1 ? 'day' : 'days'}.` : `Finish today’s goal to keep your ${stats.streakDays}-day streak.`}</p>
               </Card>
             )}
           </ResourceView>
 
           <Card className="bg-surface-2">
-            <span className="text-[13px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">Tip</span>
+            <span className="text-[13px] font-extrabold text-fg-muted">Tip</span>
             <p className="text-[13px] leading-relaxed">Press <Kbd>{QUICK_ASK_KEYS}</Kbd> to ask Bardy about your notes without leaving what you’re doing.</p>
           </Card>
         </div>
