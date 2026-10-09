@@ -9,6 +9,7 @@ import { NavigationProvider, useNavigation } from './navigation'
 import { ConversationPanel } from './ConversationPanel'
 import { QuickAsk } from './QuickAsk'
 import { Sidebar } from './Sidebar'
+import { readAndClearPendingNav } from './pending-nav'
 import { CHAT_MIN_WIDTH } from './conversation-panel'
 import {
   CONTENT_MIN_WIDTH,
@@ -27,6 +28,26 @@ function loadSidebarWidth(): number {
     // fall through to default
   }
   return sidebarDefaultWidth(window.innerWidth)
+}
+
+/**
+ * Consumes a navigation target left by the floating window (e.g. after the
+ * chat agent builds a quiz there). Checked on mount and whenever this window
+ * regains focus, since the main window may already be open and just needs
+ * to be brought forward + routed.
+ */
+function PendingNavWatcher(): null {
+  const { navigate } = useNavigation()
+  useEffect(() => {
+    const consume = (): void => {
+      const route = readAndClearPendingNav()
+      if (route) navigate(route)
+    }
+    consume()
+    window.addEventListener('focus', consume)
+    return () => window.removeEventListener('focus', consume)
+  }, [navigate])
+  return null
 }
 
 function CurrentScreen(): React.JSX.Element {
@@ -130,6 +151,7 @@ export function Shell(): React.JSX.Element {
 
   return (
     <NavigationProvider openQuickAsk={openQuickAsk}>
+      <PendingNavWatcher />
       <div className="flex h-full">
         <div
           className="grid min-w-0 flex-1"

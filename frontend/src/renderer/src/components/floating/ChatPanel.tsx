@@ -1,13 +1,16 @@
 /**
  * ChatPanel — scrollable message list with quick suggestion chips,
  * animated typing indicator, markdown formatting, and input bar.
+ *
+ * Also acts as a drop zone: dragging a file anywhere over the panel attaches
+ * it (same as the attach button), ready to send.
  */
 
-import { useEffect, useRef } from 'react'
-import { Brain, CalendarDays, Hand, Lightbulb, Zap } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Brain, CalendarDays, Hand, Lightbulb, Upload, Zap } from 'lucide-react'
 import type { ChatMessage as ChatMessageType } from '../../types/assistant'
 import ChatMessage from './ChatMessage'
-import MessageInput from './MessageInput'
+import MessageInput, { type MessageInputHandle } from './MessageInput'
 import PixelMascot from '../mascot/PixelMascot'
 
 const QUICK_PROMPTS = [
@@ -20,12 +23,13 @@ const QUICK_PROMPTS = [
 interface ChatPanelProps {
   messages: ChatMessageType[]
   isLoading: boolean
-  onSend: (text: string) => void
+  onSend: (text: string, attachment?: { name: string; text: string }) => void
   onEdit: (id: string, newText: string) => void
   onAbort?: () => void
   onVoiceStart?: () => void
   onVoiceEnd?: () => void
   onTyping?: (isTyping: boolean) => void
+  onNavigate?: (action: { screen: 'quiz' | 'cards'; documentId?: string; deckId?: string }) => void
 }
 
 export default function ChatPanel({
@@ -37,8 +41,12 @@ export default function ChatPanel({
   onVoiceStart,
   onVoiceEnd,
   onTyping,
+  onNavigate,
 }: ChatPanelProps): React.JSX.Element {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const messageInputRef = useRef<MessageInputHandle>(null)
+  const [isDraggingFile, setIsDraggingFile] = useState(false)
+  const dragDepthRef = useRef(0)
 
   // Auto-scroll to bottom on new messages or loading change
   useEffect(() => {
@@ -48,12 +56,47 @@ export default function ChatPanel({
     }
   }, [messages, isLoading])
 
+  // ── Drag-and-drop: dropping a file anywhere on the panel attaches it ──────
+
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!e.dataTransfer?.types.includes('Files')) return
+    e.preventDefault()
+    dragDepthRef.current += 1
+    setIsDraggingFile(true)
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!e.dataTransfer?.types.includes('Files')) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!e.dataTransfer?.types.includes('Files')) return
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1)
+    if (dragDepthRef.current === 0) setIsDraggingFile(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    dragDepthRef.current = 0
+    setIsDraggingFile(false)
+    const file = e.dataTransfer?.files?.[0]
+    if (file) messageInputRef.current?.attachFile(file)
+  }, [])
+
   const isEmpty = messages.length === 0
   const lastMessage = messages[messages.length - 1]
   const isThinking = isLoading && (!lastMessage || lastMessage.role === 'user' || (lastMessage.role === 'assistant' && !lastMessage.content))
 
   return (
-    <>
+    <div
+      className="chat-panel-dropzone"
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div className="chat-area" ref={scrollRef}>
         {isEmpty ? (
           <div className="chat-welcome">
@@ -99,6 +142,7 @@ export default function ChatPanel({
                   showChips={isLastAssistant && !isLoading}
                   onEdit={onEdit}
                   onChipClick={onSend}
+                  onNavigate={onNavigate}
                 />
               )
             })}
@@ -114,6 +158,7 @@ export default function ChatPanel({
         )}
       </div>
       <MessageInput
+        ref={messageInputRef}
         onSend={onSend}
         disabled={isLoading}
         onAbort={onAbort}
@@ -121,6 +166,15 @@ export default function ChatPanel({
         onVoiceEnd={onVoiceEnd}
         onTyping={onTyping}
       />
-    </>
+
+      {isDraggingFile && (
+        <div className="chat-drop-overlay" aria-hidden>
+          <div className="chat-drop-overlay-card">
+            <Upload size={18} aria-hidden />
+            <span>Drop file to attach (max 100 MB)</span>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

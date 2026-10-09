@@ -12,6 +12,7 @@ import PixelMascot from '../mascot/PixelMascot'
 import ChatPanel from './ChatPanel'
 import { checkAiHealth } from '../../services/ai'
 import { useSharedChat } from './useSharedChat'
+import { writePendingNav } from '../../shell/pending-nav'
 import './FloatingAssistant.css'
 
 export default function FloatingAssistant(): React.JSX.Element {
@@ -68,6 +69,21 @@ export default function FloatingAssistant(): React.JSX.Element {
   const maximize = useCallback(() => {
     window.bardy.floating?.maximize()
   }, [])
+
+  // This window has no NavigationProvider of its own, so a chat action
+  // (e.g. "Take the quiz") hands the target to the main window and brings
+  // it forward; the main window's PendingNavWatcher picks it up.
+  const handleChatNavigate = useCallback(
+    (action: { screen: 'quiz' | 'cards'; documentId?: string; deckId?: string }) => {
+      writePendingNav(
+        action.screen === 'quiz'
+          ? { screen: 'quiz', documentId: action.documentId }
+          : { screen: 'cards', deckId: action.deckId }
+      )
+      window.bardy.floating?.maximize()
+    },
+    []
+  )
 
   // ── Drag & Mascot Mouse Interactions ──────────────────
   const handleMascotMouseDown = useCallback(
@@ -217,6 +233,7 @@ export default function FloatingAssistant(): React.JSX.Element {
         onVoiceStart={handleVoiceStart}
         onVoiceEnd={handleVoiceEnd}
         onTyping={handleTyping}
+        onNavigate={handleChatNavigate}
       />
     </div>
   )

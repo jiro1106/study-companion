@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { MessageCircle, X, PenSquare } from "lucide-react";
 
 import ChatPanel from "../components/floating/ChatPanel";
 import { useSharedChat } from "../components/floating/useSharedChat";
 import "../components/floating/FloatingAssistant.css";
 import { ICON } from "../ui/icon";
+import { useNavigation } from "./navigation";
 import {
   chatDefaultWidth,
   chatWidthForPointer,
@@ -23,6 +24,17 @@ export function ConversationPanel({
   onToggle: () => void;
 }): React.JSX.Element {
   const { messages, isLoading, send, edit, abort, clear } = useSharedChat();
+  const { navigate } = useNavigation();
+  const handleNavigate = useCallback(
+    (action: { screen: "quiz" | "cards"; documentId?: string; deckId?: string }) => {
+      navigate(
+        action.screen === "quiz"
+          ? { screen: "quiz", documentId: action.documentId }
+          : { screen: "cards", deckId: action.deckId },
+      );
+    },
+    [navigate],
+  );
   const [width, setWidth] = useState(() => {
     try {
       const savedWidth = Number(localStorage.getItem("bardy:chat-w"));
@@ -141,6 +153,7 @@ export function ConversationPanel({
               onSend={send}
               onEdit={edit}
               onAbort={abort}
+              onNavigate={handleNavigate}
             />
           </div>
         </div>

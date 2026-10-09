@@ -122,4 +122,19 @@ export interface StudyApi {
    * caller should poll listDocuments() until processing is null.
    */
   importDocument(): Promise<string | null>
+  /**
+   * Wraps arbitrary text (e.g. a chat attachment, or recent conversation) as a
+   * lightweight document and generates a quiz from it via the backend.
+   * `count` defaults to 5. Throws if nothing could be generated.
+   */
+  createQuizFromChat(text: string, title: string, count?: number): Promise<{ documentId: string; count: number }>
+  /**
+   * Same as `createQuizFromChat`, but generates a flashcard deck instead.
+   * `count` defaults to 8. Throws if nothing could be generated.
+   */
+  createFlashcardsFromChat(
+    text: string,
+    title: string,
+    count?: number
+  ): Promise<{ documentId: string; deckId: string; count: number }>
 }

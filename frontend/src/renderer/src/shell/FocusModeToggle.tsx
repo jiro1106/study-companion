@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { ICON } from '../ui/icon'
 
 /** Toggles OS-level blocking of social media + YouTube across all browsers while studying. */
-export function FocusModeToggle(): React.JSX.Element | null {
+export function FocusModeToggle({ compact }: { compact: boolean }): React.JSX.Element | null {
   const focus = window.bardy?.focus
   const block = window.bardy?.block
   const [enabled, setEnabled] = useState(false)
@@ -71,22 +71,22 @@ export function FocusModeToggle(): React.JSX.Element | null {
         title={title}
         aria-label="Focus Mode"
         aria-pressed={enabled}
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-control border-2 border-b-4 border-danger/30 bg-surface px-3 py-2.5 text-sm font-extrabold text-danger hover:bg-danger-wash aria-pressed:border-danger/50 aria-pressed:bg-danger-wash disabled:cursor-not-allowed disabled:opacity-60 wide:justify-start"
+        className={`flex w-full cursor-pointer items-center gap-2 rounded-control border-2 border-b-4 border-danger/30 bg-surface py-2.5 text-sm font-extrabold text-danger hover:bg-danger-wash aria-pressed:border-danger/50 aria-pressed:bg-danger-wash disabled:cursor-not-allowed disabled:opacity-60 ${compact ? 'justify-center px-0' : 'justify-start px-3'}`}
       >
         {busy ? (
           <Loader2 {...ICON} size={18} className="shrink-0 animate-spin" />
         ) : (
           <Icon {...ICON} size={18} className="shrink-0" />
         )}
-        <span className="hidden wide:inline">{enabled ? 'Focus Mode: On' : 'Focus Mode'}</span>
+        {!compact && <span className="truncate">{enabled ? 'Focus Mode: On' : 'Focus Mode'}</span>}
       </button>
-      {error && (
-        <p role="alert" className="hidden text-[11px] leading-snug text-danger wide:block">
+      {!compact && error && (
+        <p role="alert" className="text-[11px] leading-snug text-danger">
           {error}
         </p>
       )}
-      {toast && (
-        <p role="status" className="hidden text-[11px] leading-snug text-fg-muted wide:block">
+      {!compact && toast && (
+        <p role="status" className="text-[11px] leading-snug text-fg-muted">
           {toast}
         </p>
       )}

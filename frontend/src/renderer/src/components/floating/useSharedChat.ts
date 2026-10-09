@@ -12,15 +12,18 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChatMessage } from '../../types/assistant'
 import { describeLearner, loadProfile } from '../../profile'
 import { sendAiChat, type AiMessage } from '../../services/ai'
+import { api, toApiError } from '../../data'
 
 export const STORAGE_KEY = 'bardy:chat:v1'
 /** A remote "busy" flag older than this is treated as stale (e.g. its window closed). */
 const BUSY_TTL_MS = 20000
 
 const SYSTEM_PROMPT =
-  'You are Bardy, a friendly, ultra-knowledgeable desktop study companion bird. ' +
+  'You are Bardy, a warm, friendly, ultra-knowledgeable desktop study companion bird. ' +
+  'Talk like an encouraging study buddy, not a formal assistant. ' +
   'Help the user with active recall, concise explanations, study tips, flashcards, and motivation. ' +
-  'Keep replies engaging, clear, and appropriately concise for a desktop widget.'
+  'Keep replies engaging, clear, and appropriately concise for a desktop widget. ' +
+  'Keep everything PG-13 and family-friendly — no profanity, slurs, or hate speech, ever.'
 
 /** Read at send time so profile edits apply in both windows without a reload. */
 function systemPrompt(): string {
@@ -30,6 +33,52 @@ function systemPrompt(): string {
 
 const RESET_RE =
   /^\W*(?:please\s+)?(?:let'?s\s+)?(?:(?:reset|restart|clear|forget|wipe)\b.{0,30}|start\s+(?:over|again|fresh)\b.{0,20}|(?:new|fresh)\s+(?:chat|convo|conversation)\b.{0,10})\W*$/i
+
+// "Agent" intent: let the user command Bardy to actually build a quiz or
+// flashcard deck, instead of just talking about one.
+const QUIZ_INTENT_RE =
+  /\bquiz\s+me\b|\b(?:make|create|generate|build|turn\s+(?:this|it|that)?\s*into)\b[^.!?\n]{0,30}\bquiz\b/i
+const FLASHCARD_INTENT_RE =
+  /\b(?:make|create|generate|build|turn\s+(?:this|it|that)?\s*into)\b[^.!?\n]{0,30}\bflash\s*cards?\b/i
+
+const QUIZ_COUNT_BOUNDS = { fallback: 5, min: 3, max: 12 }
+const FLASHCARD_COUNT_BOUNDS = { fallback: 8, min: 3, max: 20 }
+
+function extractCount(text: string, bounds: { fallback: number; min: number; max: number }): number {
+  const m = text.match(/\b(\d{1,2})\b/)
+  const n = m ? Number(m[1]) : NaN
+  return Number.isFinite(n) ? Math.min(bounds.max, Math.max(bounds.min, n)) : bounds.fallback
+}
+
+function titleFromFileName(name: string): string {
+  return name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim() || 'Chat attachment'
+}
+
+/** Folds an attachment's text into the content sent to the AI, so it stays in context on every later turn. */
+function toAiContent(m: ChatMessage): string {
+  if (!m.attachment?.text) return m.content
+  return `[Attached file: ${m.attachment.name}]\n"""\n${m.attachment.text}\n"""\n\n${m.content}`.trim()
+}
+
+/** Source material for an agent action: this message's attachment, else the most recent one in history, else recent chat. */
+function findSourceText(
+  currentAttachment: ChatMessage['attachment'] | undefined,
+  base: ChatMessage[]
+): { text: string; title: string } | null {
+  if (currentAttachment?.text) {
+    return { text: currentAttachment.text, title: titleFromFileName(currentAttachment.name) }
+  }
+  for (let i = base.length - 1; i >= 0; i--) {
+    const att = base[i].attachment
+    if (att?.text) return { text: att.text, title: titleFromFileName(att.name) }
+  }
+  const recent = base
+    .slice(-8)
+    .map((m) => `${m.role === 'user' ? 'User' : 'Bardy'}: ${m.content}`)
+    .filter(Boolean)
+    .join('\n')
+  return recent.trim() ? { text: recent, title: 'Chat notes' } : null
+}
 
 interface Stored {
   messages: ChatMessage[]
@@ -85,7 +134,8 @@ interface Options {
 export interface SharedChat {
   messages: ChatMessage[]
   isLoading: boolean
-  send: (text: string) => Promise<void>
+  /** `attachment` folds a file's text into context and shows a small chip on the message. */
+  send: (text: string, attachment?: { name: string; text: string }) => Promise<void>
   /** Edit a user message: drop it and everything after, then resend the new text. */
   edit: (id: string, newText: string) => Promise<void>
   /** Stop any in-flight reply started from this window. */
@@ -137,18 +187,104 @@ export function useSharedChat({ onActivity }: Options = {}): SharedChat {
   const isLoading = localLoading || (busyAt > 0 && Date.now() - busyAt < BUSY_TTL_MS)
 
   const run = useCallback(
-    async (text: string, base: ChatMessage[]): Promise<void> => {
+    async (text: string, base: ChatMessage[], attachment?: { name: string; text: string }): Promise<void> => {
       const trimmed = text.trim()
-      if (!trimmed) return
+      if (!trimmed && !attachment) return
 
       // "Reset the convo" is handled locally: wipe everything, no model call.
-      if (RESET_RE.test(trimmed) && trimmed.length <= 60) {
+      if (!attachment && RESET_RE.test(trimmed) && trimmed.length <= 60) {
         commit([], false)
         activityRef.current?.('idle')
         return
       }
 
-      const userMsg: ChatMessage = { id: msgId(), role: 'user', content: trimmed, timestamp: Date.now() }
+      const userMsg: ChatMessage = {
+        id: msgId(),
+        role: 'user',
+        content: trimmed || `Attached ${attachment!.name}`,
+        timestamp: Date.now(),
+        attachment: attachment
+          ? { name: attachment.name, text: attachment.text, charCount: attachment.text.length }
+          : undefined
+      }
+
+      // ── Agent intent: "quiz me on this" / "make flashcards from this" ──────
+      // Bypasses the conversational model entirely and actually builds the
+      // quiz/deck via the real generation + persistence pipeline.
+      const wantsQuiz = QUIZ_INTENT_RE.test(trimmed)
+      const wantsFlashcards = !wantsQuiz && FLASHCARD_INTENT_RE.test(trimmed)
+
+      if (wantsQuiz || wantsFlashcards) {
+        const source = findSourceText(userMsg.attachment, base)
+        const workingId = msgId()
+        const working: ChatMessage = {
+          id: workingId,
+          role: 'assistant',
+          content: wantsQuiz ? 'Building a quiz from that…' : 'Building flashcards from that…',
+          timestamp: Date.now()
+        }
+        commit([...base, userMsg, working], true)
+        setLocalLoading(true)
+        activityRef.current?.('thinking')
+
+        if (!source) {
+          commit(
+            [
+              ...base,
+              userMsg,
+              { ...working, content: "I don't have anything to build from yet — attach a file or tell me the topic first." }
+            ],
+            false
+          )
+          setLocalLoading(false)
+          activityRef.current?.('idle')
+          return
+        }
+
+        try {
+          if (wantsQuiz) {
+            const count = extractCount(trimmed, QUIZ_COUNT_BOUNDS)
+            const result = await api.createQuizFromChat(source.text, source.title, count)
+            commit(
+              [
+                ...base,
+                userMsg,
+                {
+                  ...working,
+                  content: `Done! I made a **${result.count}-question quiz** on *${source.title}*. Want to take it now?`,
+                  action: { label: 'Take the quiz', screen: 'quiz', documentId: result.documentId }
+                }
+              ],
+              false
+            )
+          } else {
+            const count = extractCount(trimmed, FLASHCARD_COUNT_BOUNDS)
+            const result = await api.createFlashcardsFromChat(source.text, source.title, count)
+            commit(
+              [
+                ...base,
+                userMsg,
+                {
+                  ...working,
+                  content: `Done! I made **${result.count} flashcards** on *${source.title}*. Ready to study them?`,
+                  action: { label: 'Study flashcards', screen: 'cards', deckId: result.deckId }
+                }
+              ],
+              false
+            )
+          }
+          activityRef.current?.('speaking')
+          setTimeout(() => activityRef.current?.('idle'), 1200)
+        } catch (err) {
+          commit([...base, userMsg, { ...working, content: toApiError(err).message }], false)
+          activityRef.current?.('idle')
+        } finally {
+          setLocalLoading(false)
+        }
+        return
+      }
+
+      // ── Normal conversational turn ───────────────────────────────────────
       const assistantId = msgId()
       const placeholder: ChatMessage = { id: assistantId, role: 'assistant', content: '', timestamp: Date.now() }
 
@@ -160,8 +296,8 @@ export function useSharedChat({ onActivity }: Options = {}): SharedChat {
       controllerRef.current = controller
 
       const history: AiMessage[] = [
-        ...base.map((m) => ({ role: m.role, content: m.content })),
-        { role: 'user', content: trimmed }
+        ...base.map((m) => ({ role: m.role, content: toAiContent(m) })),
+        { role: 'user', content: toAiContent(userMsg) }
       ]
 
       /**
@@ -215,9 +351,9 @@ export function useSharedChat({ onActivity }: Options = {}): SharedChat {
   )
 
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, attachment?: { name: string; text: string }) => {
       if (isLoading) return
-      await run(text, messagesRef.current)
+      await run(text, messagesRef.current, attachment)
     },
     [isLoading, run]
   )

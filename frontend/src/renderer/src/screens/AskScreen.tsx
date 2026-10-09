@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import { type Deck, type StudyDocument } from "../data";
 import { useResource } from "../data/use-resource";
@@ -13,6 +13,22 @@ import { ScreenHeader } from "../ui/ScreenHeader";
 import { Skeleton } from "../ui/Skeleton";
 import { Tabs } from "../ui/Tabs";
 import { NotesPanel } from "./NotesPanel";
+import {
+  NOTES_SPLIT_THRESHOLD,
+  clampNotesWidth,
+  notesDefaultWidth,
+  notesWidthForPointer,
+} from "./notes-panel-width";
+
+function loadNotesWidth(containerWidth: number): number {
+  try {
+    const n = Number(localStorage.getItem("bardy:notes-w"));
+    if (n > 0) return clampNotesWidth(n, containerWidth);
+  } catch {
+    // fall through to default
+  }
+  return notesDefaultWidth(containerWidth);
+}
 
 type View = "summary" | "original";
 
@@ -46,9 +62,66 @@ function DocumentView({ doc }: { doc: StudyDocument }): React.JSX.Element {
       ? decks.data.find((d) => d.sourceDocumentId === doc.id)?.id
       : undefined;
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [notesWidth, setNotesWidth] = useState(() => notesDefaultWidth(900));
+  const [dragging, setDragging] = useState(false);
+  const initialized = useRef(false);
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? el.clientWidth;
+      setContainerWidth(width);
+      if (!initialized.current && width > 0) {
+        initialized.current = true;
+        setNotesWidth(loadNotesWidth(width));
+      } else {
+        setNotesWidth((w) => clampNotesWidth(w, width));
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const isSplit = containerWidth >= NOTES_SPLIT_THRESHOLD;
+
+  const saveNotesWidth = (w: number): void => {
+    try {
+      localStorage.setItem("bardy:notes-w", String(w));
+    } catch {
+      // preference just isn't remembered
+    }
+  };
+  const startDrag = (e: React.PointerEvent<HTMLDivElement>): void => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragging(true);
+  };
+  const onDrag = (e: React.PointerEvent<HTMLDivElement>): void => {
+    if (!dragging || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setNotesWidth(notesWidthForPointer(e.clientX - rect.left, containerWidth));
+  };
+  const endDrag = (): void => {
+    if (!dragging) return;
+    setDragging(false);
+    saveNotesWidth(notesWidth);
+  };
+
   return (
     <div
-      className={`grid min-h-full @min-[860px]:h-full ${summary ? "@min-[860px]:grid-cols-[minmax(0,1fr)_380px]" : ""}`}
+      ref={containerRef}
+      className="grid min-h-full"
+      style={
+        isSplit
+          ? {
+              height: "100%",
+              gridTemplateColumns: `minmax(0,1fr) ${notesWidth}px`,
+              transition: dragging ? "none" : "grid-template-columns 150ms ease-out",
+            }
+          : undefined
+      }
     >
       <div className="grid content-start gap-5 overflow-y-auto px-8 pt-7 pb-12">
         <div>
@@ -159,7 +232,23 @@ function DocumentView({ doc }: { doc: StudyDocument }): React.JSX.Element {
       </div>
 
       {/* ── Right: notes ── */}
-      <NotesPanel documentId={doc.id} />
+      {isSplit ? (
+        <div className="relative min-h-0">
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize notes panel"
+            onPointerDown={startDrag}
+            onPointerMove={onDrag}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            className="absolute inset-y-0 -left-1 z-10 w-2 cursor-col-resize hover:bg-link/40 active:bg-link/60"
+          />
+          <NotesPanel documentId={doc.id} stacked={false} />
+        </div>
+      ) : (
+        <NotesPanel documentId={doc.id} stacked />
+      )}
     </div>
   );
 }

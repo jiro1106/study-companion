@@ -1,4 +1,5 @@
 import type { ChatMessage, Deck, Seed, StudyApi, StudyDocument } from './types'
+import { extractPdfText } from './pdf-text'
 
 /**
  * Dynamic import (like the pdfjs-dist import below) so this stays resolvable
@@ -51,6 +52,43 @@ export function createApi(options: {
     await sleep(DELAY_MS[mode])
     if (mode === 'error') throw new ApiError('offline', OFFLINE_MESSAGE)
     return structuredClone(work())
+  }
+
+  // Same contract as `call`, but for work that is itself asynchronous
+  // (e.g. a sequence of backend requests) rather than a synchronous read.
+  async function callAsync<T>(work: () => Promise<T>): Promise<T> {
+    await sleep(DELAY_MS[mode])
+    if (mode === 'error') throw new ApiError('offline', OFFLINE_MESSAGE)
+    return structuredClone(await work())
+  }
+
+  /** Wraps arbitrary text (e.g. a chat attachment) as a lightweight StudyDocument. */
+  function buildChatDocument(text: string, title: string): StudyDocument {
+    const clean = text.trim()
+    const wordCount = clean.split(/\s+/).filter(Boolean).length || 1
+    const safeTitle = title.trim() || 'Chat notes'
+    const doc: StudyDocument = {
+      id: crypto.randomUUID(),
+      fileName: `${safeTitle} (from chat)`,
+      title: safeTitle,
+      pageCount: Math.max(1, Math.ceil(wordCount / 350)),
+      cardCount: 0,
+      processing: null,
+      summary: {
+        readMinutes: Math.max(1, Math.ceil(wordCount / 200)),
+        keyIdeas: [{ text: clean.replace(/\s+/g, ' ').slice(0, 200).trim() || safeTitle, page: 1 }],
+        examTerms: [],
+        excerpt: {
+          page: 1,
+          heading: safeTitle,
+          paragraphs: [clean.slice(0, 500) || safeTitle],
+          highlight: clean.slice(0, 100) || safeTitle
+        }
+      },
+      text: clean
+    }
+    db.documents.unshift(doc)
+    return doc
   }
 
   function message(role: ChatMessage['role'], text: string, citedPages: number[]): ChatMessage {
@@ -195,28 +233,11 @@ export function createApi(options: {
       // Run extraction + AI generation in the background
       ;(async () => {
         try {
-          const { getDocument: getPDFDocument, GlobalWorkerOptions } = await import('pdfjs-dist')
-          GlobalWorkerOptions.workerSrc = new URL(
-            'pdfjs-dist/build/pdf.worker.min.mjs',
-            import.meta.url
-          ).href
-
-          const pdf = await getPDFDocument({ data: bytes }).promise
-          doc.pageCount = pdf.numPages
-
-          const pages: string[] = []
-          for (let p = 1; p <= pdf.numPages; p++) {
-            doc.processing = { currentPage: p }
-            const page = await pdf.getPage(p)
-            const content = await page.getTextContent()
-            const pageText = content.items
-              .map((item) => ('str' in item ? (item as { str: string }).str : ''))
-              .join(' ')
-              .replace(/\s{2,}/g, ' ')
-            pages.push(`[Page ${p}]\n${pageText}`)
-          }
-
-          doc.text = pages.join('\n\n').trim()
+          const { text, pageCount } = await extractPdfText(bytes, (currentPage) => {
+            doc.processing = { currentPage }
+          })
+          doc.pageCount = pageCount
+          doc.text = text
 
           if (!doc.text) {
             // Scanned/image PDF — nothing to extract
@@ -238,7 +259,35 @@ export function createApi(options: {
       })()
 
       return id
-    }
+    },
+
+    createQuizFromChat: (text, title, count) =>
+      callAsync(async () => {
+        const doc = buildChatDocument(text, title)
+        await generateDocQuiz(doc, db, count ?? 5)
+        const created = db.quiz.filter((q) => q.documentId === doc.id)
+        if (created.length === 0) {
+          throw new ApiError(
+            'unknown',
+            "I couldn't build a quiz from that — the study engine might be offline."
+          )
+        }
+        return { documentId: doc.id, count: created.length }
+      }),
+
+    createFlashcardsFromChat: (text, title, count) =>
+      callAsync(async () => {
+        const doc = buildChatDocument(text, title)
+        await generateDocFlashcards(doc, db, count ?? 8)
+        const deck = db.decks.find((d) => d.sourceDocumentId === doc.id)
+        if (!deck) {
+          throw new ApiError(
+            'unknown',
+            "I couldn't build flashcards from that — the study engine might be offline."
+          )
+        }
+        return { documentId: doc.id, deckId: deck.id, count: deck.cardCount }
+      })
   }
 }
 
@@ -317,14 +366,14 @@ async function generateDocSummary(doc: StudyDocument): Promise<void> {
 
 const OPTION_KEYS = ['A', 'B', 'C', 'D'] as const
 
-async function generateDocQuiz(doc: StudyDocument, db: Seed): Promise<void> {
+async function generateDocQuiz(doc: StudyDocument, db: Seed, count = 5): Promise<void> {
   const context = doc.text!.slice(0, GEN_CONTEXT_CHARS)
 
   try {
-    const parsed = await postJson('/api/quiz', { topic: doc.title, count: 5, context })
+    const parsed = await postJson('/api/quiz', { topic: doc.title, count, context })
     const questions = Array.isArray(parsed.questions) ? parsed.questions : []
 
-    for (const q of questions.slice(0, 10)) {
+    for (const q of questions.slice(0, count)) {
       if (!q.question || !q.options || typeof q.options !== 'object') continue
       const options = OPTION_KEYS.map((k) => q.options[k]).filter((v): v is string => typeof v === 'string')
       if (options.length < 2) continue
@@ -348,13 +397,13 @@ async function generateDocQuiz(doc: StudyDocument, db: Seed): Promise<void> {
 const DECK_TONES: Deck['tone'][] = ['brand', 'link', 'warning']
 let _deckToneIndex = 0
 
-async function generateDocFlashcards(doc: StudyDocument, db: Seed): Promise<void> {
+async function generateDocFlashcards(doc: StudyDocument, db: Seed, count = 8): Promise<void> {
   const context = doc.text!.slice(0, GEN_CONTEXT_CHARS)
 
   try {
-    const parsed = await postJson('/api/flashcards', { topic: doc.title, count: 8, context })
+    const parsed = await postJson('/api/flashcards', { topic: doc.title, count, context })
     const cards = Array.isArray(parsed.flashcards)
-      ? parsed.flashcards.filter((c: Record<string, unknown>) => c.front && c.back).slice(0, 20)
+      ? parsed.flashcards.filter((c: Record<string, unknown>) => c.front && c.back).slice(0, count)
       : []
     if (cards.length === 0) return
 

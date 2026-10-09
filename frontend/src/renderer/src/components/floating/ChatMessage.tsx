@@ -4,7 +4,7 @@
  *  - Copy button (both roles)
  *  - Edit button + inline edit box (user messages)
  *  - Speak / stop button with local Piper TTS (assistant messages)
- *  - Inline option chips / follow-up chips (assistant messages)
+ *  - Inline option chips / follow-up suggestion chips (assistant messages)
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
@@ -22,6 +22,8 @@ interface ChatMessageProps {
   showChips?: boolean
   onEdit?: (id: string, newText: string) => void
   onChipClick?: (text: string) => void
+  /** Called when the user clicks a follow-up action CTA (e.g. "Take the quiz"). */
+  onNavigate?: (action: { screen: 'quiz' | 'cards'; documentId?: string; deckId?: string }) => void
 }
 
 interface Chip {
@@ -117,6 +119,23 @@ function SaveIcon(): React.JSX.Element {
   )
 }
 
+function PaperclipIcon(): React.JSX.Element {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21.44 11.05 12.25 20.24a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.5 3.5 0 1 1 4.95 4.95L9.41 17.42a1.5 1.5 0 0 1-2.12-2.12l8.49-8.49" />
+    </svg>
+  )
+}
+
+function ArrowRightIcon(): React.JSX.Element {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </svg>
+  )
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function ChatMessage({
@@ -126,6 +145,7 @@ export default function ChatMessage({
   showChips = false,
   onEdit,
   onChipClick,
+  onNavigate,
 }: ChatMessageProps): React.JSX.Element {
   const isUser = message.role === 'user'
 
@@ -364,6 +384,12 @@ export default function ChatMessage({
 
     return (
       <div className="chat-msg-row chat-msg-row-user">
+        {message.attachment && (
+          <span className="chat-attachment-chip" title={`${message.attachment.charCount.toLocaleString()} characters attached`}>
+            <PaperclipIcon />
+            {message.attachment.name}
+          </span>
+        )}
         <div className="chat-msg chat-msg-user">{message.content}</div>
         {actions}
       </div>
@@ -372,6 +398,8 @@ export default function ChatMessage({
 
   // ── Assistant message (with chips) ────────────────────────────────────────
 
+  // Prefer chips extracted from an actual lettered/numbered option list;
+  // otherwise fall back to generic follow-up suggestions.
   const chips =
     showChips && message.content && !isStreaming
       ? (() => {
@@ -395,6 +423,18 @@ export default function ChatMessage({
       </div>
 
       {actions}
+
+      {message.action && !isStreaming && (
+        <button
+          type="button"
+          className="chat-action-cta"
+          onClick={() => onNavigate?.(message.action!)}
+          disabled={disabled}
+        >
+          {message.action.label}
+          <ArrowRightIcon />
+        </button>
+      )}
 
       {chips.length > 0 && (
         <div className="chat-chips" role="group" aria-label="Quick replies">

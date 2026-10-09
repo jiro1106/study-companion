@@ -55,7 +55,7 @@ export function Sidebar({
           className="font-display text-[28px] leading-none font-black tracking-[-0.02em] text-primary"
           aria-label="Bardy"
         >
-          {compact ? "b" : "Bardy"}
+          {compact ? "B" : "Bardy"}
         </span>
         <div className={`flex items-center ${compact ? "flex-col" : ""}`}>
           <ThemeToggle />
@@ -93,8 +93,19 @@ export function Sidebar({
       </nav>
 
       <div className="mt-auto grid gap-3">
-        <FocusModeToggle />
         <MascotToggle compact={compact} />
+        <button
+          type="button"
+          onClick={openQuickAsk}
+          title={`Quick ask (${QUICK_ASK_KEYS})`}
+          aria-label="Quick ask"
+          className={`flex w-full cursor-pointer items-center gap-2 overflow-hidden rounded-control border-2 border-b-4 border-border bg-surface py-2.5 text-sm font-extrabold text-link ${compact ? "justify-center px-0" : "px-3"}`}
+        >
+          <Search {...ICON} size={18} className="shrink-0" />
+          {!compact && <span className="min-w-0 flex-1 truncate text-left">Quick ask</span>}
+          {!compact && <Kbd>{QUICK_ASK_KEYS}</Kbd>}
+        </button>
+        <FocusModeToggle compact={compact} />
         <button
           type="button"
           onClick={() => setSettingsOpen(true)}
@@ -104,17 +115,6 @@ export function Sidebar({
         >
           <Settings {...ICON} size={18} className="shrink-0" />
           {!compact && <span className="truncate">Settings</span>}
-        </button>
-        <button
-          type="button"
-          onClick={openQuickAsk}
-          title={`Quick ask (${QUICK_ASK_KEYS})`}
-          aria-label="Quick ask"
-          className={`flex cursor-pointer flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-control border-2 border-b-4 border-border bg-surface py-2.5 text-sm font-extrabold whitespace-nowrap text-link ${compact ? "px-0" : "px-3"}`}
-        >
-          <Search {...ICON} size={18} />
-          {!compact && <span>Quick ask</span>}
-          {!compact && <Kbd>{QUICK_ASK_KEYS}</Kbd>}
         </button>
       </div>
       <SettingsDialog

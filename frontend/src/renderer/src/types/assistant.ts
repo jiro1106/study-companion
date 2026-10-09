@@ -23,4 +23,12 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   timestamp: number
+  /**
+   * A file the user attached to this message. `text` is folded into every
+   * subsequent AI request as context (not just the turn it was sent on),
+   * but the chat bubble only ever shows `name`/`charCount`.
+   */
+  attachment?: { name: string; text: string; charCount: number }
+  /** A follow-up the assistant is offering, e.g. "open the quiz I just made". */
+  action?: { label: string; screen: 'quiz' | 'cards'; documentId?: string; deckId?: string }
 }

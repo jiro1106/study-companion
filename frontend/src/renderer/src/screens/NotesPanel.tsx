@@ -1,10 +1,11 @@
 /**
  * NotesPanel — rich note-taking sidebar for the document view.
  *
- * Two modes:
- *  Write  — contenteditable rich text with a formatting toolbar
- *           (bold / italic / underline / headings / lists / highlight colours)
- *  Draw   — HTML5 canvas freehand drawing with pen, highlighter, eraser
+ * Text and drawing coexist on the same notebook surface: a contenteditable
+ * layer holds the typed notes, and a canvas sits on top of it covering the
+ * full scrollable height. The Write/Draw toggle only changes which layer
+ * receives pointer input — typed notes stay visible under ink, and ink
+ * stays visible over notes, at the same time.
  *
  * Notes are persisted to localStorage keyed by documentId so each document
  * keeps its own notebook. The canvas is saved as a PNG data-URL.
@@ -202,17 +203,26 @@ const IconEraser = () => (
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function NotesPanel({ documentId }: { documentId: string }): React.JSX.Element {
+export function NotesPanel({
+  documentId,
+  stacked = false,
+}: {
+  documentId: string
+  /** True when the panel renders full-width below the document instead of beside it. */
+  stacked?: boolean
+}): React.JSX.Element {
   const [mode, setMode] = useState<NoteMode>('write')
 
-  // Write mode
+  // Shared notebook surface (scrollable container holding both layers)
+  const notebookRef = useRef<HTMLDivElement>(null)
+
+  // Write layer
   const editorRef = useRef<HTMLDivElement>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isEmpty, setIsEmpty] = useState(true)
   const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set())
 
-  // Draw mode
-  const canvasWrapRef = useRef<HTMLDivElement>(null)
+  // Draw layer
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [drawTool, setDrawTool] = useState<DrawTool>('pen')
   const [drawColor, setDrawColor] = useState(DRAW_COLORS[0].value)
@@ -220,27 +230,90 @@ export function NotesPanel({ documentId }: { documentId: string }): React.JSX.El
   const isDrawingRef = useRef(false)
   const lastPosRef = useRef<{ x: number; y: number } | null>(null)
 
-  // ── Write: load notes when documentId changes ─────────────────────────────
+  // ── Canvas sizing: always covers the notebook's full scrollable height ────
 
-  useEffect(() => {
-    const el = editorRef.current
-    if (!el) return
-    const html = loadText(documentId)
-    el.innerHTML = html
-    setIsEmpty(el.textContent?.trim() === '')
+  /**
+   * Resize the canvas to match the notebook's current content size, preserving ink.
+   *
+   * Uses getImageData/putImageData (synchronous) rather than toDataURL/Image.onload
+   * (asynchronous) — resize events fire rapidly while the panel is being dragged, and
+   * an async round-trip lets a later resize snapshot the canvas before an earlier
+   * restore has finished painting, wiping the drawing out.
+   */
+  const syncCanvasSize = useCallback(() => {
+    const notebook = notebookRef.current
+    const canvas = canvasRef.current
+    if (!notebook || !canvas) return
+
+    const width = notebook.clientWidth
+    const height = Math.max(notebook.scrollHeight, notebook.clientHeight)
+    if (width === 0 || height === 0) return
+    if (canvas.width === width && canvas.height === height) return
+
+    const ctx = canvas.getContext('2d')
+    const hadContent = ctx && canvas.width > 0 && canvas.height > 0
+    const snapshot = hadContent ? ctx.getImageData(0, 0, canvas.width, canvas.height) : null
+
+    canvas.width = width
+    canvas.height = height
+    canvas.style.height = `${height}px`
+
+    if (snapshot && ctx) {
+      ctx.putImageData(snapshot, 0, 0)
+    }
+  }, [])
+
+  // ── Load both layers fresh whenever the document changes ──────────────────
+
+  useLayoutEffect(() => {
+    const editor = editorRef.current
+    const notebook = notebookRef.current
+    const canvas = canvasRef.current
+    if (!editor || !notebook || !canvas) return
+
+    editor.innerHTML = loadText(documentId)
+    setIsEmpty(editor.textContent?.trim() === '')
+
+    const width = notebook.clientWidth || 1
+    const height = Math.max(notebook.scrollHeight, notebook.clientHeight, 1)
+    canvas.width = width
+    canvas.height = height
+    canvas.style.height = `${height}px`
+    canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height)
+
+    const saved = loadDraw(documentId)
+    if (saved) restoreCanvas(canvas, saved)
   }, [documentId])
+
+  // Keep the canvas matched to the notebook size as the panel is resized.
+  useEffect(() => {
+    const notebook = notebookRef.current
+    if (!notebook) return
+    const ro = new ResizeObserver(() => syncCanvasSize())
+    ro.observe(notebook)
+    return () => ro.disconnect()
+  }, [syncCanvasSize])
+
+  // ── Write: persistence ─────────────────────────────────────────────────────
 
   const flushSave = useCallback(() => {
     if (!editorRef.current) return
-    const html = editorRef.current.innerHTML
-    saveText(documentId, html)
-    setIsEmpty(editorRef.current.textContent?.trim() === '')
+    saveText(documentId, editorRef.current.innerHTML)
   }, [documentId])
 
   const scheduleSave = useCallback(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(flushSave, 400)
   }, [flushSave])
+
+  const handleInput = useCallback(() => {
+    // The placeholder must vanish the instant a character is typed, not after
+    // the save debounce settles — update it synchronously on every keystroke.
+    setIsEmpty(editorRef.current?.textContent?.trim() === '')
+    scheduleSave()
+    // Typed content can grow/shrink the notebook's height immediately.
+    syncCanvasSize()
+  }, [scheduleSave, syncCanvasSize])
 
   // Detect active formats on selection change
   useEffect(() => {
@@ -263,7 +336,8 @@ export function NotesPanel({ documentId }: { documentId: string }): React.JSX.El
     editorRef.current?.focus()
     document.execCommand(cmd, false, value ?? undefined)
     scheduleSave()
-  }, [scheduleSave])
+    syncCanvasSize()
+  }, [scheduleSave, syncCanvasSize])
 
   const applyHighlight = useCallback((color: string) => {
     editorRef.current?.focus()
@@ -271,38 +345,12 @@ export function NotesPanel({ documentId }: { documentId: string }): React.JSX.El
     scheduleSave()
   }, [scheduleSave])
 
-  // ── Draw: resize canvas to fill container ─────────────────────────────────
+  // ── Mode switch: hand pointer input to the right layer ────────────────────
 
-  useLayoutEffect(() => {
-    if (mode !== 'draw') return
-    const wrap = canvasWrapRef.current
-    const canvas = canvasRef.current
-    if (!wrap || !canvas) return
-
-    const resize = (): void => {
-      const { width, height } = wrap.getBoundingClientRect()
-      if (width === 0 || height === 0) return
-
-      // Save current drawing before resizing (resizing clears canvas)
-      const existing = canvas.toDataURL()
-      const hadContent = existing !== 'data:,'
-
-      canvas.width = Math.round(width)
-      canvas.height = Math.round(height)
-
-      if (hadContent) {
-        restoreCanvas(canvas, existing)
-      } else {
-        const saved = loadDraw(documentId)
-        if (saved) restoreCanvas(canvas, saved)
-      }
-    }
-
-    resize()
-    const ro = new ResizeObserver(resize)
-    ro.observe(wrap)
-    return () => ro.disconnect()
-  }, [mode, documentId])
+  const switchMode = useCallback((next: NoteMode) => {
+    if (next === 'draw') editorRef.current?.blur()
+    setMode(next)
+  }, [])
 
   // ── Draw: events ──────────────────────────────────────────────────────────
 
@@ -367,7 +415,12 @@ export function NotesPanel({ documentId }: { documentId: string }): React.JSX.El
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <aside className="flex min-h-[420px] flex-col border-t-2 border-border mid:min-h-0 mid:border-t-0 mid:border-l-2">
+    <aside
+      className={[
+        'flex min-h-[420px] flex-col border-border',
+        stacked ? 'border-t-2' : 'h-full min-h-0 border-l-2',
+      ].join(' ')}
+    >
       {/* ── Header ── */}
       <div className="flex shrink-0 items-center justify-between gap-3 border-b-2 border-border px-4 py-3">
         <b className="font-display text-[15px] font-black">Notes</b>
@@ -376,7 +429,8 @@ export function NotesPanel({ documentId }: { documentId: string }): React.JSX.El
             <button
               key={m}
               type="button"
-              onClick={() => setMode(m)}
+              onClick={() => switchMode(m)}
+              title={m === 'write' ? 'Type notes' : 'Draw over your notes'}
               className={[
                 'px-3 py-[5px] text-[12px] font-bold capitalize transition-colors',
                 mode === m
@@ -390,196 +444,189 @@ export function NotesPanel({ documentId }: { documentId: string }): React.JSX.El
         </div>
       </div>
 
-      {/* ── Write mode ── */}
-      {mode === 'write' && (
-        <>
-          {/* Toolbar */}
-          <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border/60 bg-surface px-3 py-1.5">
-            {/* Text formatting */}
-            <ToolbarBtn active={activeFormats.has('bold')} onClick={() => exec('bold')} title="Bold (Ctrl+B)">
-              <IconBold />
-            </ToolbarBtn>
-            <ToolbarBtn active={activeFormats.has('italic')} onClick={() => exec('italic')} title="Italic (Ctrl+I)">
-              <IconItalic />
-            </ToolbarBtn>
-            <ToolbarBtn active={activeFormats.has('underline')} onClick={() => exec('underline')} title="Underline (Ctrl+U)">
-              <IconUnderline />
-            </ToolbarBtn>
-            <ToolbarBtn active={activeFormats.has('strikethrough')} onClick={() => exec('strikeThrough')} title="Strikethrough">
-              <IconStrike />
-            </ToolbarBtn>
-            <Sep />
+      {/* ── Toolbar (contextual to the active input mode) ── */}
+      {mode === 'write' ? (
+        <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border/60 bg-surface px-3 py-1.5">
+          {/* Text formatting */}
+          <ToolbarBtn active={activeFormats.has('bold')} onClick={() => exec('bold')} title="Bold (Ctrl+B)">
+            <IconBold />
+          </ToolbarBtn>
+          <ToolbarBtn active={activeFormats.has('italic')} onClick={() => exec('italic')} title="Italic (Ctrl+I)">
+            <IconItalic />
+          </ToolbarBtn>
+          <ToolbarBtn active={activeFormats.has('underline')} onClick={() => exec('underline')} title="Underline (Ctrl+U)">
+            <IconUnderline />
+          </ToolbarBtn>
+          <ToolbarBtn active={activeFormats.has('strikethrough')} onClick={() => exec('strikeThrough')} title="Strikethrough">
+            <IconStrike />
+          </ToolbarBtn>
+          <Sep />
 
-            {/* Headings */}
-            <ToolbarBtn onClick={() => exec('formatBlock', 'h1')} title="Heading 1" className="text-[11px]">H1</ToolbarBtn>
-            <ToolbarBtn onClick={() => exec('formatBlock', 'h2')} title="Heading 2" className="text-[11px]">H2</ToolbarBtn>
-            <ToolbarBtn onClick={() => exec('formatBlock', 'h3')} title="Heading 3" className="text-[11px]">H3</ToolbarBtn>
-            <ToolbarBtn onClick={() => exec('formatBlock', 'p')} title="Normal text" className="text-[11px]">¶</ToolbarBtn>
-            <Sep />
+          {/* Headings */}
+          <ToolbarBtn onClick={() => exec('formatBlock', 'h1')} title="Heading 1" className="text-[11px]">H1</ToolbarBtn>
+          <ToolbarBtn onClick={() => exec('formatBlock', 'h2')} title="Heading 2" className="text-[11px]">H2</ToolbarBtn>
+          <ToolbarBtn onClick={() => exec('formatBlock', 'h3')} title="Heading 3" className="text-[11px]">H3</ToolbarBtn>
+          <ToolbarBtn onClick={() => exec('formatBlock', 'p')} title="Normal text" className="text-[11px]">¶</ToolbarBtn>
+          <Sep />
 
-            {/* Lists */}
-            <ToolbarBtn onClick={() => exec('insertUnorderedList')} title="Bullet list">
-              <IconBullet />
-            </ToolbarBtn>
-            <ToolbarBtn onClick={() => exec('insertOrderedList')} title="Numbered list">
-              <IconOrdered />
-            </ToolbarBtn>
-            <Sep />
+          {/* Lists */}
+          <ToolbarBtn onClick={() => exec('insertUnorderedList')} title="Bullet list">
+            <IconBullet />
+          </ToolbarBtn>
+          <ToolbarBtn onClick={() => exec('insertOrderedList')} title="Numbered list">
+            <IconOrdered />
+          </ToolbarBtn>
+          <Sep />
 
-            {/* Highlight colours */}
-            {HIGHLIGHT_COLORS.map((hc) => (
-              hc.id === 'none' ? (
-                <ToolbarBtn
-                  key={hc.id}
-                  onClick={() => applyHighlight('transparent')}
-                  title="Remove highlight"
-                  className="text-[11px] text-fg-faint"
-                >
-                  ✕
-                </ToolbarBtn>
-              ) : (
-                <button
-                  key={hc.id}
-                  type="button"
-                  title={`${hc.label} highlight`}
-                  onClick={() => applyHighlight(hc.css)}
-                  style={{ backgroundColor: hc.css }}
-                  className="size-[18px] rounded-[4px] border-2 border-border/70 transition-transform hover:scale-110"
-                />
-              )
-            ))}
-          </div>
-
-          {/* Editable content area */}
-          <div className="relative min-h-0 flex-1 overflow-y-auto">
-            {isEmpty && (
-              <p
-                className="pointer-events-none absolute inset-0 px-5 py-4 text-[14px] text-fg-faint"
-                aria-hidden
+          {/* Highlight colours */}
+          {HIGHLIGHT_COLORS.map((hc) => (
+            hc.id === 'none' ? (
+              <ToolbarBtn
+                key={hc.id}
+                onClick={() => applyHighlight('transparent')}
+                title="Remove highlight"
+                className="text-[11px] text-fg-faint"
               >
-                Start typing your notes here…
-              </p>
-            )}
-            <div
-              ref={editorRef}
-              contentEditable
-              suppressContentEditableWarning
-              spellCheck
-              onInput={scheduleSave}
-              onPaste={(e) => {
-                // Paste as plain text to avoid importing foreign HTML styles
-                e.preventDefault()
-                const text = e.clipboardData.getData('text/plain')
-                document.execCommand('insertText', false, text)
-              }}
+                ✕
+              </ToolbarBtn>
+            ) : (
+              <button
+                key={hc.id}
+                type="button"
+                title={`${hc.label} highlight`}
+                onClick={() => applyHighlight(hc.css)}
+                style={{ backgroundColor: hc.css }}
+                className="size-[18px] rounded-[4px] border-2 border-border/70 transition-transform hover:scale-110"
+              />
+            )
+          ))}
+        </div>
+      ) : (
+        <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border/60 bg-surface px-3 py-1.5">
+          {/* Tools */}
+          <ToolbarBtn active={drawTool === 'pen'} onClick={() => setDrawTool('pen')} title="Pen">
+            <IconPen />
+          </ToolbarBtn>
+          <ToolbarBtn active={drawTool === 'highlighter'} onClick={() => setDrawTool('highlighter')} title="Highlighter">
+            <IconHighlighter />
+          </ToolbarBtn>
+          <ToolbarBtn active={drawTool === 'eraser'} onClick={() => setDrawTool('eraser')} title="Eraser">
+            <IconEraser />
+          </ToolbarBtn>
+          <Sep />
+
+          {/* Colours */}
+          {DRAW_COLORS.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              title={c.label}
+              onClick={() => setDrawColor(c.value)}
+              style={{ backgroundColor: c.value }}
               className={[
-                'min-h-full px-5 py-4 text-[14px] leading-relaxed outline-none',
-                '[&_h1]:mb-2 [&_h1]:mt-4 [&_h1]:font-display [&_h1]:text-[20px] [&_h1]:font-black',
-                '[&_h2]:mb-1.5 [&_h2]:mt-3 [&_h2]:font-display [&_h2]:text-[17px] [&_h2]:font-bold',
-                '[&_h3]:mb-1 [&_h3]:mt-2.5 [&_h3]:font-display [&_h3]:text-[15px] [&_h3]:font-bold',
-                '[&_ul]:list-disc [&_ul]:pl-5',
-                '[&_ol]:list-decimal [&_ol]:pl-5',
-                '[&_li]:mb-0.5',
-                '[&_a]:text-link [&_a]:underline',
-                '[&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-fg-muted',
+                'size-[18px] rounded-full border-2 transition-transform hover:scale-110',
+                drawColor === c.value ? 'scale-125 border-white' : 'border-border/50',
               ].join(' ')}
             />
-          </div>
-        </>
-      )}
+          ))}
+          <Sep />
 
-      {/* ── Draw mode ── */}
-      {mode === 'draw' && (
-        <>
-          {/* Draw toolbar */}
-          <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border/60 bg-surface px-3 py-1.5">
-            {/* Tools */}
-            <ToolbarBtn active={drawTool === 'pen'} onClick={() => setDrawTool('pen')} title="Pen">
-              <IconPen />
-            </ToolbarBtn>
-            <ToolbarBtn active={drawTool === 'highlighter'} onClick={() => setDrawTool('highlighter')} title="Highlighter">
-              <IconHighlighter />
-            </ToolbarBtn>
-            <ToolbarBtn active={drawTool === 'eraser'} onClick={() => setDrawTool('eraser')} title="Eraser">
-              <IconEraser />
-            </ToolbarBtn>
-            <Sep />
-
-            {/* Colours */}
-            {DRAW_COLORS.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                title={c.label}
-                onClick={() => setDrawColor(c.value)}
-                style={{ backgroundColor: c.value }}
-                className={[
-                  'size-[18px] rounded-full border-2 transition-transform hover:scale-110',
-                  drawColor === c.value ? 'scale-125 border-white' : 'border-border/50',
-                ].join(' ')}
-              />
-            ))}
-            <Sep />
-
-            {/* Stroke sizes */}
-            {STROKE_SIZES.map((s) => (
-              <button
-                key={s.value}
-                type="button"
-                title={s.label}
-                onClick={() => setStrokeSize(s.value)}
-                className={[
-                  'flex size-[26px] items-center justify-center rounded transition-colors',
-                  strokeSize === s.value ? 'bg-surface-2' : 'hover:bg-surface-2',
-                ].join(' ')}
-              >
-                <div
-                  style={{
-                    width: Math.min(s.value * 2.5, 14),
-                    height: Math.min(s.value * 2.5, 14),
-                    borderRadius: '50%',
-                    backgroundColor: 'currentColor',
-                  }}
-                />
-              </button>
-            ))}
-            <Sep />
-
+          {/* Stroke sizes */}
+          {STROKE_SIZES.map((s) => (
             <button
+              key={s.value}
               type="button"
-              onClick={handleClearCanvas}
-              title="Clear drawing"
-              className="ml-auto rounded px-2 py-[3px] text-[11px] font-bold text-fg-muted hover:text-danger"
+              title={s.label}
+              onClick={() => setStrokeSize(s.value)}
+              className={[
+                'flex size-[26px] items-center justify-center rounded transition-colors',
+                strokeSize === s.value ? 'bg-surface-2' : 'hover:bg-surface-2',
+              ].join(' ')}
             >
-              Clear
+              <div
+                style={{
+                  width: Math.min(s.value * 2.5, 14),
+                  height: Math.min(s.value * 2.5, 14),
+                  borderRadius: '50%',
+                  backgroundColor: 'currentColor',
+                }}
+              />
             </button>
-          </div>
+          ))}
+          <Sep />
 
-          {/* Canvas area */}
-          <div
-            ref={canvasWrapRef}
-            className="relative min-h-0 flex-1 overflow-hidden bg-[#0d1b1e]"
+          <button
+            type="button"
+            onClick={handleClearCanvas}
+            title="Clear drawing"
+            className="ml-auto rounded px-2 py-[3px] text-[11px] font-bold text-fg-muted hover:text-danger"
           >
-            <canvas
-              ref={canvasRef}
-              style={{
-                cursor: drawTool === 'eraser' ? 'cell' : 'crosshair',
-                display: 'block',
-                width: '100%',
-                height: '100%',
-                touchAction: 'none',
-              }}
-              onMouseDown={onMouseDown}
-              onMouseMove={onMouseMove}
-              onMouseUp={onPointerUp}
-              onMouseLeave={onPointerUp}
-            />
-            <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/40 px-3 py-1 text-[11px] text-white/50">
-              {drawTool === 'eraser' ? 'Eraser active' : `${drawTool} · ${DRAW_COLORS.find((c) => c.value === drawColor)?.label}`}
-            </span>
-          </div>
-        </>
+            Clear
+          </button>
+        </div>
       )}
+
+      {/* ── Notebook surface: text + drawing layered together ── */}
+      <div className="relative min-h-0 flex-1">
+        <div ref={notebookRef} className="relative h-full overflow-y-auto">
+          {isEmpty && (
+            <p
+              className="pointer-events-none absolute inset-0 z-0 px-5 py-4 text-[14px] text-fg-faint"
+              aria-hidden
+            >
+              Start typing your notes here…
+            </p>
+          )}
+
+          {/* Write layer */}
+          <div
+            ref={editorRef}
+            contentEditable={mode === 'write'}
+            suppressContentEditableWarning
+            spellCheck
+            onInput={handleInput}
+            onPaste={(e) => {
+              // Paste as plain text to avoid importing foreign HTML styles
+              e.preventDefault()
+              const text = e.clipboardData.getData('text/plain')
+              document.execCommand('insertText', false, text)
+            }}
+            className={[
+              'relative z-0 min-h-full px-5 py-4 text-[14px] leading-relaxed outline-none',
+              '[&_h1]:mb-2 [&_h1]:mt-4 [&_h1]:font-display [&_h1]:text-[20px] [&_h1]:font-black',
+              '[&_h2]:mb-1.5 [&_h2]:mt-3 [&_h2]:font-display [&_h2]:text-[17px] [&_h2]:font-bold',
+              '[&_h3]:mb-1 [&_h3]:mt-2.5 [&_h3]:font-display [&_h3]:text-[15px] [&_h3]:font-bold',
+              '[&_ul]:list-disc [&_ul]:pl-5',
+              '[&_ol]:list-decimal [&_ol]:pl-5',
+              '[&_li]:mb-0.5',
+              '[&_a]:text-link [&_a]:underline',
+              '[&_blockquote]:border-l-4 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-fg-muted',
+            ].join(' ')}
+          />
+
+          {/* Draw layer: transparent canvas covering the full notebook height */}
+          <canvas
+            ref={canvasRef}
+            className="absolute top-0 left-0 z-10 w-full"
+            style={{
+              pointerEvents: mode === 'draw' ? 'auto' : 'none',
+              cursor: mode === 'draw' ? (drawTool === 'eraser' ? 'cell' : 'crosshair') : 'default',
+              touchAction: 'none',
+            }}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={onPointerUp}
+            onMouseLeave={onPointerUp}
+          />
+        </div>
+
+        {/* Status badge: pinned to the panel, not the scrolling content */}
+        {mode === 'draw' && (
+          <span className="pointer-events-none absolute bottom-2 left-1/2 z-20 -translate-x-1/2 rounded-full bg-black/40 px-3 py-1 text-[11px] whitespace-nowrap text-white/70">
+            {drawTool === 'eraser' ? 'Eraser active' : `${drawTool} · ${DRAW_COLORS.find((c) => c.value === drawColor)?.label}`}
+          </span>
+        )}
+      </div>
     </aside>
   )
 }
