@@ -22,7 +22,7 @@ It must begin with `v24`.
 If you already have the repository, switch to the desktop branch:
 
 ```sh
-git switch feature/desktop
+git switch feature/desktop-ui
 ```
 
 For a new clone after the branch is pushed to GitHub:
@@ -30,7 +30,7 @@ For a new clone after the branch is pushed to GitHub:
 ```sh
 git clone <repository-url>
 cd study-companion
-git switch feature/desktop
+git switch feature/desktop-ui
 ```
 
 ## Run BARDHIE on macOS
