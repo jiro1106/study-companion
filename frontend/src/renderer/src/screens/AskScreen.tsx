@@ -34,7 +34,7 @@ function DocumentView({ doc }: { doc: StudyDocument }): React.JSX.Element {
   const deckId = decks.status === 'ready' ? decks.data.find((d) => d.sourceDocumentId === doc.id)?.id : undefined
 
   return (
-    <div className="grid min-h-full mid:h-full mid:grid-cols-[minmax(0,1fr)_380px]">
+    <div className={`grid min-h-full mid:h-full ${summary ? 'mid:grid-cols-[minmax(0,1fr)_380px]' : ''}`}>
       <div className="grid content-start gap-5 overflow-y-auto px-8 pt-7 pb-12">
         <ScreenHeader
           eyebrow={`${doc.fileName} · ${doc.pageCount} pages`}
