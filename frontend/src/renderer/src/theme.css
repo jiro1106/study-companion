@@ -2,8 +2,7 @@
  * BARDHIE design tokens (Sprout green) for Tailwind CSS v4.
  * Source of truth for values: docs/design/DESIGN.md.
  *
- * Usage, once the renderer exists: move this file to src/renderer/src/theme.css
- * and import it right after Tailwind in src/renderer/src/index.css:
+ * Imported right after Tailwind in src/renderer/src/index.css:
  *
  *   @import "tailwindcss";
  *   @import "./theme.css";
@@ -26,6 +25,7 @@
   --link: #1cb0f6;
   --link-lip: #1899d6;
   --night: #000437;
+  --scrim: rgb(0 0 0 / 0.6); /* dims the page behind a modal; same in light and dark */
   --streak: #ff9600;
 
   /* feedback */
@@ -97,6 +97,7 @@
   --color-link: var(--link);
   --color-link-lip: var(--link-lip);
   --color-night: var(--night);
+  --color-scrim: var(--scrim);
   --color-streak: var(--streak);
 
   --color-success: var(--success);
@@ -118,7 +119,7 @@
 }
 
 @theme {
-  /* Fonts load from Google Fonts: Nunito 800/900, Nunito Sans 500/700/800. */
+  /* Fonts are bundled with Fontsource: Nunito 800/900, Nunito Sans 500/700/800. */
   --font-display: "Nunito", ui-rounded, system-ui, sans-serif;
   --font-body: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 

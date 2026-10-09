@@ -1,80 +1,19 @@
-# BARDHIE Desktop
+# BARDHIE
 
-BARDHIE is a cross-platform Electron desktop application. Phase 0 provides a secure development shell that runs from one codebase on macOS and Windows.
+BARDHIE is an offline study companion for macOS and Windows: it reads your PDFs and turns them into summaries, flashcards, and quizzes with a local AI model.
 
-## What you need
+## Repository layout
 
-- Git
-- Node.js 24 (npm is included)
+| Folder | What it holds | Owner |
+|---|---|---|
+| `frontend/` | Electron desktop app (main, preload, React renderer) | Desktop/UI team |
+| `backend/` | Python + FastAPI study engine: AI, PDF extraction | AI/backend team |
+| `docs/` | Specs, plans, and the design system (`docs/design/`) | Everyone |
 
-Verify Node after installing it:
+## Run the desktop app
 
-```sh
-node --version
-```
+See `frontend/README.md`. In short:
 
-It must begin with `v24`.
-
-## Get the project
-
-If you already have the repository, switch to the desktop branch:
-
-```sh
-git switch feature/desktop
-```
-
-For a new clone after the branch is pushed to GitHub:
-
-```sh
-git clone <repository-url>
-cd study-companion
-git switch feature/desktop
-```
-
-## Run BARDHIE on macOS
-
-Open Terminal in the project folder and run:
-
-```sh
-npm install
-npm run dev
-```
-
-A native BARDHIE window should open and display `Platform: darwin`. Keep the Terminal process running while using the app; press `Control + C` there to stop it.
-
-## Run BARDHIE on Windows
-
-Open PowerShell in the project folder and run:
-
-```powershell
-npm install
-npm run dev
-```
-
-A native BARDHIE window should open and display `Platform: win32`. Keep PowerShell open while using the app; press `Ctrl + C` to stop it.
-
-## Verify your setup
-
-Run these before sharing changes:
-
-```sh
-npm test
-npm run typecheck
-npm run build
-```
-
-`npm run build` produces production bundles in `out/`. It does not yet create a Windows `.exe`, macOS `.app`, or `.dmg` installer.
-
-## Manual smoke test
-
-Test once on a Mac and once on a Windows machine:
-
-1. Run `npm run dev`.
-2. Confirm a normal, resizable BARDHIE window opens.
-3. Confirm the displayed platform is `darwin` on macOS or `win32` on Windows.
-4. Change text in `src/renderer/src/App.tsx`, save it, and confirm the window hot-reloads.
-5. Restore the text before committing.
-
-## Phase 0 boundaries
-
-This phase does not yet include AI/study features, PDF imports, local persistence, tray behavior, global shortcuts, background operation, installers, signing, or deployment. The Electron main process owns native capabilities; the sandboxed React renderer only receives the typed `window.bardhie.platform` value through the preload bridge.
+    cd frontend
+    npm install
+    npm run dev

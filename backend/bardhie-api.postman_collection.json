@@ -1,0 +1,70 @@
+{
+  "info": {
+    "name": "BARDHIE Study Companion API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/health"
+      }
+    },
+    {
+      "name": "Tutor - Ask a question",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/api/tutor",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"Explain Newton's second law of motion in simple terms.\" }\n  ],\n  \"stream\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "Quiz - Generate questions",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/api/quiz",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"topic\": \"Photosynthesis\",\n  \"count\": 3\n}"
+        }
+      }
+    },
+    {
+      "name": "Flashcards - Generate cards",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/api/flashcards",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"topic\": \"The French Revolution\",\n  \"count\": 5\n}"
+        }
+      }
+    },
+    {
+      "name": "Planner - Create study plan",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/api/planner",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"goal\": \"Prepare for my biology exam\",\n  \"available_hours_per_day\": 2,\n  \"days\": 5,\n  \"topics\": [\"Cell biology\", \"Genetics\", \"Evolution\"]\n}"
+        }
+      }
+    }
+  ]
+}
