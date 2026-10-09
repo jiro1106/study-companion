@@ -60,7 +60,7 @@ function DeckRow({ deck, onOpen, onDelete }: { deck: Deck; onOpen: () => void; o
   const pill = STATUS_PILL[deck.status]
 
   return (
-    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-card border-2 border-b-4 border-border bg-surface px-4 py-3.5">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 rounded-card border-2 border-b-4 border-border bg-surface px-4 py-3.5 transition-colors duration-150 ease-out hover:border-border-strong hover:bg-surface-2">
       <button type="button" onClick={onOpen} className={`grid size-12 cursor-pointer place-items-center rounded-[14px] border-2 font-display text-lg font-black ${TILE_TONE[deck.tone]}`} aria-label={`Study ${deck.title}`}>
         {deck.subjectCode}
       </button>
