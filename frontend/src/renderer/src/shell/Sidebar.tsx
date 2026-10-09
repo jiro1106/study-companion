@@ -27,7 +27,7 @@ const NAV: Array<{ screen: ScreenName; label: string; Icon: typeof Home }> = [
 ]
 
 const isMac = window.bardhie?.platform === 'darwin'
-export const QUICK_ASK_KEYS = isMac ? '⌘ ⇧ Space' : 'Ctrl Shift Space'
+export const QUICK_ASK_KEYS = isMac ? '⌘ K' : 'Ctrl K'
 
 export function Sidebar({
   compact,

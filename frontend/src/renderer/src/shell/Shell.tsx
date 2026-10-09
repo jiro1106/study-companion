@@ -112,14 +112,14 @@ export function Shell(): React.JSX.Element {
     saveWidth(sbWidth)
   }
 
-  // Cmd/Ctrl+Shift+Space while the app is focused. The system-wide shortcut is Phase 1.
+  // Cmd/Ctrl+K while the app is focused. The system-wide shortcut is Phase 1.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent): void {
       if ((event.metaKey || event.ctrlKey) && !event.shiftKey && event.code === 'KeyB') {
         event.preventDefault()
         toggleSidebar()
       }
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.code === 'Space') {
+      if ((event.metaKey || event.ctrlKey) && !event.shiftKey && event.code === 'KeyK') {
         event.preventDefault()
         setQuickAskOpen(true)
       }
