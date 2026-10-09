@@ -320,6 +320,8 @@ app.whenReady()
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
+    // dev runs show Electron's default dock icon otherwise
+    app.dock?.setIcon(join(__dirname, '../../resources/icon.png'))
   }
 })
 

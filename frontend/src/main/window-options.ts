@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import type { BrowserWindowConstructorOptions } from 'electron'
 
 export const windowOptions = {
@@ -7,6 +8,7 @@ export const windowOptions = {
   minHeight: 520,
   resizable: true,
   title: 'Bardy',
+  icon: join(__dirname, '../../resources/icon.png'), // window/taskbar icon on Windows + Linux
   webPreferences: {
     contextIsolation: true,
     nodeIntegration: false,
