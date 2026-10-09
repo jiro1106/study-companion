@@ -137,7 +137,8 @@ def _synthesize_sync(text: str, voice: str) -> bytes:
 
     buf = io.BytesIO()
     with wave.open(buf, "wb") as wav:
-        piper_voice.synthesize(text, wav)
+        # piper-tts >= 1.3 renamed the direct-to-wave-file API to synthesize_wav().
+        piper_voice.synthesize_wav(text, wav)
     return buf.getvalue()
 
 
