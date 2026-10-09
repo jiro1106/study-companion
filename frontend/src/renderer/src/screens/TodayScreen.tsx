@@ -1,7 +1,7 @@
 import { Brain, Flame, Sparkles, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
-import { api, toApiError, type Deck, type Exam, type TodayStats } from '../data'
+import { api, toApiError, type Deck, type TodayStats } from '../data'
 import { useResource } from '../data/use-resource'
 import { PAGE } from '../ui/page'
 import { QUICK_ASK_KEYS } from '../shell/Sidebar'
@@ -35,12 +35,6 @@ const STATUS_PILL: Record<Deck['status'], { tone: 'warn' | 'bad' | 'ok' | 'brand
 function greeting(now: Date): string {
   const hour = now.getHours()
   return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
-}
-
-function daysUntil(isoDate: string, now: Date): number {
-  const target = new Date(`${isoDate}T00:00:00`)
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  return Math.round((target.getTime() - today.getTime()) / 86_400_000)
 }
 
 function GoalRing({ value }: { value: number }): React.JSX.Element {
@@ -91,14 +85,13 @@ export function TodayScreen(): React.JSX.Element {
   const { navigate } = useNavigation()
   const today = useResource<TodayStats>(() => api.getToday(), [])
   const decks = useResource<Deck[]>(() => api.listDecks(), [])
-  const exams = useResource<Exam[]>(() => api.listExams(), [])
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const now = new Date()
 
   if (today.status === 'error') {
     return (
       <div className={PAGE}>
-        <ErrorState message={today.error.message} onRetry={() => { today.reload(); decks.reload(); exams.reload() }} />
+        <ErrorState message={today.error.message} onRetry={() => { today.reload(); decks.reload() }} />
       </div>
     )
   }
@@ -208,32 +201,6 @@ export function TodayScreen(): React.JSX.Element {
               </Card>
             )}
           </ResourceView>
-
-          <Card>
-            <span className="text-[13px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">Upcoming exams</span>
-            <ResourceView resource={exams} loading={<Skeleton className="h-24" />} isEmpty={(list) => list.length === 0} empty={<p className="text-[13px] text-fg-muted">No exams added yet.</p>}>
-              {(list) => (
-                <ul className="grid gap-3">
-                  {list.map((exam) => {
-                    const date = new Date(`${exam.date}T00:00:00`)
-                    const days = daysUntil(exam.date, now)
-                    return (
-                      <li key={exam.id} className="grid grid-cols-[auto_1fr] items-center gap-3">
-                        <div className="w-12 overflow-hidden rounded-[10px] border-2 border-border text-center">
-                          <span className="block bg-danger py-1 text-[10px] leading-none font-extrabold tracking-wider text-on-primary uppercase">{date.toLocaleDateString(undefined, { month: 'short' })}</span>
-                          <b className="block font-display text-xl leading-[1.4] font-black">{date.getDate()}</b>
-                        </div>
-                        <div className="min-w-0">
-                          <b className="block truncate">{exam.title}</b>
-                          <span className="text-[13px] text-fg-muted">{days > 0 ? `${days} days` : days === 0 ? 'Today' : 'Done'} · {exam.linkedDecks} {exam.linkedDecks === 1 ? 'deck' : 'decks'} linked</span>
-                        </div>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </ResourceView>
-          </Card>
 
           <Card className="bg-surface-2">
             <span className="text-[13px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">Tip</span>
