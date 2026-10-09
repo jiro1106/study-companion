@@ -1,8 +1,10 @@
 import type { BrowserWindowConstructorOptions } from 'electron'
 
 export const windowOptions = {
-  width: 960,
-  height: 640,
+  width: 1100,
+  height: 720,
+  minWidth: 720,
+  minHeight: 520,
   resizable: true,
   title: 'BARDHIE',
   webPreferences: {
