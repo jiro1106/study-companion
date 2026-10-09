@@ -43,7 +43,7 @@ export function QuickAsk({ open, onClose }: { open: boolean; onClose: () => void
       onClose={onClose}
       onClick={(event) => event.target === dialogRef.current && onClose()}
       aria-labelledby="quick-ask-title"
-      className="mx-auto mt-[12vh] w-[min(560px,calc(100%-32px))] rounded-[20px] border-2 border-b-[6px] border-border bg-surface text-fg backdrop:bg-night/35"
+      className="mx-auto mt-[12vh] w-[min(560px,calc(100%-32px))] rounded-[20px] border-2 border-b-[6px] border-border bg-surface text-fg backdrop:bg-scrim"
     >
       <form onSubmit={onSubmit} className="grid gap-3 p-4">
         <div className="flex items-center justify-between gap-2">

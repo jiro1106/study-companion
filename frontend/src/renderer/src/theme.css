@@ -25,6 +25,7 @@
   --link: #1cb0f6;
   --link-lip: #1899d6;
   --night: #000437;
+  --scrim: rgb(0 0 0 / 0.6); /* dims the page behind a modal; same in light and dark */
   --streak: #ff9600;
 
   /* feedback */
@@ -96,6 +97,7 @@
   --color-link: var(--link);
   --color-link-lip: var(--link-lip);
   --color-night: var(--night);
+  --color-scrim: var(--scrim);
   --color-streak: var(--streak);
 
   --color-success: var(--success);

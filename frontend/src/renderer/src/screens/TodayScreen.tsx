@@ -7,6 +7,7 @@ import { PAGE } from '../ui/page'
 import { QUICK_ASK_KEYS } from '../shell/Sidebar'
 import { useNavigation } from '../shell/navigation'
 import { Button } from '../ui/Button'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { Card } from '../ui/Card'
 import { EmptyState } from '../ui/EmptyState'
 import { ErrorState } from '../ui/ErrorState'
@@ -68,19 +69,20 @@ function DeckRow({ deck, onOpen, onDelete }: { deck: Deck; onOpen: () => void; o
         <div className="truncate text-[13px] text-fg-muted">{deck.cardCount} cards · from {deck.sourceName}</div>
         <div className="mt-2"><ProgressBar size="sm" value={deck.mastery} label={`${deck.title} mastery`} /></div>
       </button>
-      {confirming ? (
-        <div className="flex gap-2">
-          <Button variant="danger" disabled={deleting} onClick={async () => { setDeleting(true); await onDelete() }}>Delete</Button>
-          <Button variant="ghost" onClick={() => setConfirming(false)}>Cancel</Button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2">
-          <Pill tone={pill.tone}>{pill.label(deck)}</Pill>
-          <button type="button" onClick={() => setConfirming(true)} aria-label={`Delete ${deck.title}`} className="cursor-pointer rounded-control p-2 text-fg-faint hover:bg-surface-2 hover:text-danger">
-            <Trash2 {...ICON} size={18} />
-          </button>
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        <Pill tone={pill.tone}>{pill.label(deck)}</Pill>
+        <button type="button" onClick={() => setConfirming(true)} aria-label={`Delete ${deck.title}`} className="cursor-pointer rounded-control p-2 text-fg-faint hover:bg-surface-2 hover:text-danger">
+          <Trash2 {...ICON} size={18} />
+        </button>
+      </div>
+      <ConfirmDialog
+        open={confirming}
+        title={`Delete ${deck.title}?`}
+        body="This also deletes its cards and quiz progress."
+        busy={deleting}
+        onCancel={() => setConfirming(false)}
+        onConfirm={async () => { setDeleting(true); await onDelete() }}
+      />
     </div>
   )
 }
