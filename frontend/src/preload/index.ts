@@ -17,6 +17,15 @@ const bardhie: Window['bardhie'] = Object.freeze({
     set: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke('mascot:set', enabled),
   }),
 
+  /** Open a URL in the system's default web browser. */
+  openExternal: (url: string): void => {
+    ipcRenderer.send('shell:open-external', url)
+  },
+
+  /** Save text content to a file via a native save dialog. */
+  saveFile: (content: string, defaultName: string): Promise<{ saved: boolean; filePath?: string }> =>
+    ipcRenderer.invoke('file:save', { content, defaultName }),
+
   // Only expose the floating API in the floating window
   ...(isFloating
     ? {

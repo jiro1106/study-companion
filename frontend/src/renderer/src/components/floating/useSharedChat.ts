@@ -48,7 +48,13 @@ function parse(raw: string | null): Stored {
 
 function load(): Stored {
   try {
-    return parse(localStorage.getItem(STORAGE_KEY))
+    const stored = parse(localStorage.getItem(STORAGE_KEY))
+    // Clear a stale busyAt from a previous crashed session so we don't
+    // open stuck in "loading" state.
+    if (stored.busyAt > 0 && Date.now() - stored.busyAt >= BUSY_TTL_MS) {
+      stored.busyAt = 0
+    }
+    return stored
   } catch {
     return { messages: [], busyAt: 0 }
   }
@@ -58,7 +64,7 @@ function persist(state: Stored): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {
-    // Storage unavailable: the chat still works, just without cross-window sync.
+    // Storage unavailable: chat still works, just without cross-window sync.
   }
 }
 
@@ -77,6 +83,8 @@ export interface SharedChat {
   edit: (id: string, newText: string) => Promise<void>
   /** Stop any in-flight reply started from this window. */
   abort: () => void
+  /** Wipe the entire conversation (aborts first if a reply is streaming). */
+  clear: () => void
 }
 
 export function useSharedChat({ onActivity }: Options = {}): SharedChat {
@@ -149,7 +157,13 @@ export function useSharedChat({ onActivity }: Options = {}): SharedChat {
         { role: 'user', content: trimmed }
       ]
 
+      /**
+       * Commit a reply update ONLY when the controller is still live.
+       * Without this guard, a late `onChunk` fired after `abort()` would
+       * reset `busyAt` to now — leaving `isLoading` stuck true for 20 s.
+       */
       const setReply = (content: string, busy: boolean): void => {
+        if (controller.signal.aborted) return
         commit(
           messagesRef.current.map((m) => (m.id === assistantId ? { ...m, content } : m)),
           busy
@@ -178,6 +192,7 @@ export function useSharedChat({ onActivity }: Options = {}): SharedChat {
         activityRef.current?.('speaking')
         setTimeout(() => activityRef.current?.('idle'), 1200)
       } catch (err) {
+        // AbortError means abort() already cleaned up — nothing else to do.
         if ((err as Error).name === 'AbortError') return
         setReply(
           'Sorry, I had trouble reaching the AI server. Please make sure Ollama and the backend are running on http://127.0.0.1:8001.',
@@ -215,10 +230,23 @@ export function useSharedChat({ onActivity }: Options = {}): SharedChat {
     controllerRef.current.abort()
     controllerRef.current = null
     setLocalLoading(false)
-    // Keep what streamed so far, but drop an empty placeholder bubble.
-    const kept = messagesRef.current.filter((m, i, all) => !(m.role === 'assistant' && !m.content && i === all.length - 1))
+    // Keep what was streamed so far; drop only an empty placeholder bubble.
+    const kept = messagesRef.current.filter(
+      (m, i, all) => !(m.role === 'assistant' && !m.content && i === all.length - 1)
+    )
     commit(kept, false)
+    activityRef.current?.('idle')
   }, [commit])
 
-  return { messages, isLoading, send, edit, abort }
+  const clear = useCallback(() => {
+    if (controllerRef.current) {
+      controllerRef.current.abort()
+      controllerRef.current = null
+    }
+    setLocalLoading(false)
+    commit([], false)
+    activityRef.current?.('idle')
+  }, [commit])
+
+  return { messages, isLoading, send, edit, abort, clear }
 }

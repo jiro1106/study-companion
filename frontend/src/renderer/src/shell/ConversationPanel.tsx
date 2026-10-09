@@ -1,4 +1,4 @@
-import { MessageCircle, X } from 'lucide-react'
+import { MessageCircle, X, PenSquare } from 'lucide-react'
 
 import ChatPanel from '../components/floating/ChatPanel'
 import { useSharedChat } from '../components/floating/useSharedChat'
@@ -10,7 +10,7 @@ import { ICON } from '../ui/icon'
  * shared chat as the floating assistant, so both always show the same conversation.
  */
 export function ConversationPanel({ open, onToggle }: { open: boolean; onToggle: () => void }): React.JSX.Element {
-  const { messages, isLoading, send, edit } = useSharedChat()
+  const { messages, isLoading, send, edit, abort, clear } = useSharedChat()
 
   return (
     <>
@@ -35,18 +35,36 @@ export function ConversationPanel({ open, onToggle }: { open: boolean; onToggle:
         <div className="flex h-full w-[min(380px,45vw)] flex-col bg-[#132025]">
           <div className="flex items-center justify-between gap-2 border-b border-[rgba(165,237,110,0.1)] bg-[#192a30] px-4 py-3">
             <b className="font-display text-[15px] font-black text-[#f1f5f9]">Bardy</b>
-            <button
-              type="button"
-              onClick={onToggle}
-              title="Collapse chat"
-              aria-label="Collapse chat"
-              className="flex size-7 cursor-pointer items-center justify-center rounded-lg bg-[rgba(148,163,184,0.12)] text-[#94a3b8] hover:text-[#f1f5f9]"
-            >
-              <X {...ICON} size={16} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={clear}
+                title="New chat"
+                aria-label="New chat"
+                disabled={messages.length === 0 && !isLoading}
+                className="flex size-7 cursor-pointer items-center justify-center rounded-lg bg-[rgba(148,163,184,0.12)] text-[#94a3b8] hover:text-[#f1f5f9] disabled:opacity-40 disabled:cursor-default"
+              >
+                <PenSquare {...ICON} size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={onToggle}
+                title="Collapse chat"
+                aria-label="Collapse chat"
+                className="flex size-7 cursor-pointer items-center justify-center rounded-lg bg-[rgba(148,163,184,0.12)] text-[#94a3b8] hover:text-[#f1f5f9]"
+              >
+                <X {...ICON} size={16} />
+              </button>
+            </div>
           </div>
           <div className="flex min-h-0 flex-1 flex-col">
-            <ChatPanel messages={messages} isLoading={isLoading} onSend={send} onEdit={edit} />
+            <ChatPanel
+              messages={messages}
+              isLoading={isLoading}
+              onSend={send}
+              onEdit={edit}
+              onAbort={abort}
+            />
           </div>
         </div>
       </aside>

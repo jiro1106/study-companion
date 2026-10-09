@@ -21,6 +21,7 @@ interface ChatPanelProps {
   isLoading: boolean
   onSend: (text: string) => void
   onEdit: (id: string, newText: string) => void
+  onAbort?: () => void
   onVoiceStart?: () => void
   onVoiceEnd?: () => void
   onTyping?: (isTyping: boolean) => void
@@ -31,6 +32,7 @@ export default function ChatPanel({
   isLoading,
   onSend,
   onEdit,
+  onAbort,
   onVoiceStart,
   onVoiceEnd,
   onTyping,
@@ -112,6 +114,7 @@ export default function ChatPanel({
       <MessageInput
         onSend={onSend}
         disabled={isLoading}
+        onAbort={onAbort}
         onVoiceStart={onVoiceStart}
         onVoiceEnd={onVoiceEnd}
         onTyping={onTyping}

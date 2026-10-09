@@ -1,11 +1,16 @@
 /**
- * ChatMessage — renders a single user or assistant message bubble with markdown support,
- * a copy action, inline edit for user messages, and option chips on assistant messages.
+ * ChatMessage — renders a single user or assistant message bubble with:
+ *  - Markdown rendering (assistant messages)
+ *  - Copy button (both roles)
+ *  - Edit button + inline edit box (user messages)
+ *  - Speak / stop button with local Piper TTS (assistant messages)
+ *  - Inline option chips / follow-up chips (assistant messages)
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import type { ChatMessage as ChatMessageType } from '../../types/assistant'
 import MarkdownView from '../ui/MarkdownView'
+import { speakText, stopCurrentSpeech, type TtsState } from '../../services/voice'
 
 interface ChatMessageProps {
   message: ChatMessageType
@@ -26,7 +31,7 @@ interface Chip {
 const FOLLOW_UP_CHIPS: Chip[] = [
   { label: '💡 Explain more', send: 'Can you explain that in more detail?' },
   { label: '📝 Give an example', send: 'Can you give me an example?' },
-  { label: '🧠 Quiz me on this', send: 'Quiz me on what you just explained.' }
+  { label: '🧠 Quiz me on this', send: 'Quiz me on what you just explained.' },
 ]
 
 /** Extract lettered/numbered options ("A) foo", "B. bar", "1) baz") from a bot message. */
@@ -41,9 +46,10 @@ function extractOptions(content: string): Chip[] {
     const short = text.length > 40 ? `${text.slice(0, 39)}…` : text
     chips.push({ label: `${key}. ${short}`, send: `${key}) ${text}` })
   }
-  // Need at least two to count as a set of choices
   return chips.length >= 2 ? chips.slice(0, 6) : []
 }
+
+// ── SVG icon helpers ──────────────────────────────────────────────────────────
 
 function CopyIcon(): React.JSX.Element {
   return (
@@ -71,19 +77,80 @@ function EditIcon(): React.JSX.Element {
   )
 }
 
+function SpeakerIcon(): React.JSX.Element {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+    </svg>
+  )
+}
+
+function StopSpeakerIcon(): React.JSX.Element {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <line x1="23" y1="9" x2="17" y2="15" />
+      <line x1="17" y1="9" x2="23" y2="15" />
+    </svg>
+  )
+}
+
+function SpinnerIcon(): React.JSX.Element {
+  return (
+    <svg className="speak-spinner" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+      <path d="M12 2a10 10 0 0 1 10 10" />
+    </svg>
+  )
+}
+
+function SaveIcon(): React.JSX.Element {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  )
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export default function ChatMessage({
   message,
   isStreaming = false,
   disabled = false,
   showChips = false,
   onEdit,
-  onChipClick
+  onChipClick,
 }: ChatMessageProps): React.JSX.Element {
   const isUser = message.role === 'user'
+
+  // Copy state
   const [copied, setCopied] = useState(false)
+
+  // Inline-edit state (user messages)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(message.content)
   const editRef = useRef<HTMLTextAreaElement>(null)
+
+  // Save state (assistant messages)
+  const [saveState, setSaveState] = useState<'idle' | 'saved' | 'error'>('idle')
+
+  // TTS state (assistant messages)
+  const [speakState, setSpeakState] = useState<TtsState>('idle')
+  const ttsAbortRef = useRef<AbortController | null>(null)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      // Cancel any in-flight TTS for this message
+      ttsAbortRef.current?.abort()
+    }
+  }, [])
 
   useEffect(() => {
     if (editing && editRef.current) {
@@ -92,6 +159,8 @@ export default function ChatMessage({
       el.setSelectionRange(el.value.length, el.value.length)
     }
   }, [editing])
+
+  // ── Copy ──────────────────────────────────────────────────────────────────
 
   const handleCopy = useCallback(async () => {
     try {
@@ -108,6 +177,8 @@ export default function ChatMessage({
     setTimeout(() => setCopied(false), 1400)
   }, [message.content])
 
+  // ── Edit ──────────────────────────────────────────────────────────────────
+
   const startEdit = (): void => {
     setDraft(message.content)
     setEditing(true)
@@ -120,8 +191,53 @@ export default function ChatMessage({
     onEdit?.(message.id, trimmed)
   }
 
+  // ── Save as file ──────────────────────────────────────────────────────────
+
+  const handleSave = useCallback(async () => {
+    if (!window.bardhie?.saveFile) return
+    const timestamp = new Date().toISOString().slice(0, 10)
+    const result = await window.bardhie.saveFile(message.content, `bardy-note-${timestamp}.txt`)
+    if (result.saved) {
+      setSaveState('saved')
+      setTimeout(() => setSaveState('idle'), 1800)
+    }
+  }, [message.content])
+
+  // ── Speak ─────────────────────────────────────────────────────────────────
+
+  const handleSpeak = useCallback(async () => {
+    // Clicking while playing/loading → stop
+    if (speakState === 'playing' || speakState === 'loading') {
+      ttsAbortRef.current?.abort()
+      stopCurrentSpeech()
+      if (mountedRef.current) setSpeakState('idle')
+      return
+    }
+
+    const ctrl = new AbortController()
+    ttsAbortRef.current = ctrl
+
+    const safeSpeakState = (s: TtsState): void => {
+      if (mountedRef.current) setSpeakState(s)
+    }
+
+    try {
+      await speakText(message.content, safeSpeakState, ctrl.signal)
+    } catch {
+      // Error state already applied inside speakText
+      if (mountedRef.current) {
+        setTimeout(() => { if (mountedRef.current) setSpeakState('idle') }, 2500)
+      }
+    } finally {
+      if (ttsAbortRef.current === ctrl) ttsAbortRef.current = null
+    }
+  }, [message.content, speakState])
+
+  // ── Action bar ────────────────────────────────────────────────────────────
+
   const actions = message.content ? (
     <div className={`chat-msg-actions ${isUser ? 'chat-msg-actions-user' : ''}`}>
+      {/* Copy */}
       <button
         type="button"
         className="chat-action-btn"
@@ -131,6 +247,8 @@ export default function ChatMessage({
       >
         {copied ? <CheckIcon /> : <CopyIcon />}
       </button>
+
+      {/* Edit (user only) */}
       {isUser && onEdit && (
         <button
           type="button"
@@ -143,8 +261,64 @@ export default function ChatMessage({
           <EditIcon />
         </button>
       )}
+
+      {/* Save as file (assistant only, not while streaming) */}
+      {!isUser && !isStreaming && typeof window.bardhie?.saveFile === 'function' && (
+        <button
+          type="button"
+          className="chat-action-btn"
+          onClick={() => void handleSave()}
+          title={saveState === 'saved' ? 'Saved!' : 'Save as file'}
+          aria-label="Save message as file"
+        >
+          {saveState === 'saved' ? <CheckIcon /> : <SaveIcon />}
+        </button>
+      )}
+
+      {/* Speak (assistant only, not while streaming) */}
+      {!isUser && !isStreaming && (
+        <button
+          type="button"
+          className={[
+            'chat-action-btn',
+            speakState === 'playing' ? 'speak-btn-playing' : '',
+            speakState === 'loading' ? 'speak-btn-loading' : '',
+            speakState === 'error' ? 'speak-btn-error' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          onClick={handleSpeak}
+          disabled={disabled && speakState === 'idle'}
+          aria-label={
+            speakState === 'playing'
+              ? 'Stop speaking'
+              : speakState === 'loading'
+                ? 'Generating speech…'
+                : 'Read aloud'
+          }
+          title={
+            speakState === 'playing'
+              ? 'Stop speaking'
+              : speakState === 'loading'
+                ? 'Generating speech…'
+                : speakState === 'error'
+                  ? 'Speech unavailable — is the backend running with Piper?'
+                  : 'Read aloud (local TTS)'
+          }
+        >
+          {speakState === 'loading' ? (
+            <SpinnerIcon />
+          ) : speakState === 'playing' ? (
+            <StopSpeakerIcon />
+          ) : (
+            <SpeakerIcon />
+          )}
+        </button>
+      )}
     </div>
   ) : null
+
+  // ── User message (with optional inline edit) ──────────────────────────────
 
   if (isUser) {
     if (editing) {
@@ -194,12 +368,15 @@ export default function ChatMessage({
     )
   }
 
-  const chips = showChips && message.content && !isStreaming
-    ? (() => {
-        const options = extractOptions(message.content)
-        return options.length > 0 ? options : FOLLOW_UP_CHIPS
-      })()
-    : []
+  // ── Assistant message (with chips) ────────────────────────────────────────
+
+  const chips =
+    showChips && message.content && !isStreaming
+      ? (() => {
+          const opts = extractOptions(message.content)
+          return opts.length > 0 ? opts : FOLLOW_UP_CHIPS
+        })()
+      : []
 
   return (
     <div className="chat-msg-row chat-msg-row-assistant">
@@ -214,7 +391,9 @@ export default function ChatMessage({
           </div>
         ) : null}
       </div>
+
       {actions}
+
       {chips.length > 0 && (
         <div className="chat-chips" role="group" aria-label="Quick replies">
           {chips.map((chip) => (

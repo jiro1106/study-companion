@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { marked } from 'marked'
+import { useCallback, useMemo } from 'react'
+import { marked, Renderer } from 'marked'
 
 interface MarkdownViewProps {
   content: string
@@ -7,13 +7,25 @@ interface MarkdownViewProps {
   isStreaming?: boolean
 }
 
-// Configure marked options for clean output
-marked.setOptions({
+// Custom renderer: every link opens in the system browser via Electron shell.
+const renderer = new Renderer()
+renderer.link = ({ href, title, text }): string => {
+  const safeHref = href ?? ''
+  const titleAttr = title ? ` title="${title}"` : ''
+  return `<a href="${safeHref}"${titleAttr} class="md-link" data-external="true">${text}</a>`
+}
+
+marked.use({
+  renderer,
   gfm: true,
-  breaks: true
+  breaks: true,
 })
 
-export default function MarkdownView({ content, className = '', isStreaming = false }: MarkdownViewProps): React.JSX.Element {
+export default function MarkdownView({
+  content,
+  className = '',
+  isStreaming = false,
+}: MarkdownViewProps): React.JSX.Element {
   const html = useMemo(() => {
     if (!content) return ''
     try {
@@ -23,8 +35,23 @@ export default function MarkdownView({ content, className = '', isStreaming = fa
     }
   }, [content])
 
+  // Intercept clicks on [data-external] links and open in the system browser.
+  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = (e.target as HTMLElement).closest('a[data-external]') as HTMLAnchorElement | null
+    if (!target) return
+    e.preventDefault()
+    const href = target.getAttribute('href') ?? ''
+    if (!href) return
+    if (window.bardhie?.openExternal) {
+      window.bardhie.openExternal(href)
+    } else {
+      // Fallback for non-Electron / dev environments
+      window.open(href, '_blank', 'noopener,noreferrer')
+    }
+  }, [])
+
   return (
-    <div className={`markdown-content ${className}`}>
+    <div className={`markdown-content ${className}`} onClick={handleClick}>
       <div
         className="markdown-body"
         dangerouslySetInnerHTML={{ __html: html }}
