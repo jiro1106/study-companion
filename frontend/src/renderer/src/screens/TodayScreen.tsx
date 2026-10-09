@@ -127,12 +127,12 @@ export function TodayScreen(): React.JSX.Element {
         )}
       </ResourceView>
 
-      <div className="grid items-start gap-6 mid:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="grid items-start gap-6 @min-[860px]:grid-cols-[minmax(0,1fr)_300px]">
         <div className="grid min-w-0 gap-6">
           <ResourceView resource={today} loading={<Skeleton className="h-40 rounded-[20px]" />}>
             {(stats) => (
               <>
-                <div className="grid items-center gap-5 rounded-[20px] border-2 border-b-[6px] border-primary bg-primary-wash p-6 mid:grid-cols-[1fr_auto]">
+                <div className="grid items-center gap-5 rounded-[20px] border-2 border-b-[6px] border-primary bg-primary-wash p-6 @min-[860px]:grid-cols-[1fr_auto]">
                   <div className="grid gap-3">
                     <span className="text-[13px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Daily goal · {stats.goalMinutes} min</span>
                     <h2 className="font-display text-[26px] leading-tight font-black text-fg">

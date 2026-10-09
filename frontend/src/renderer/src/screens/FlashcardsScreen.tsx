@@ -78,7 +78,7 @@ function Session({ cards }: { cards: Flashcard[] }): React.JSX.Element {
               </span>
             </button>
             {session.flipped && (
-              <div className="grid grid-cols-2 gap-2.5 mid:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2.5 @min-[860px]:grid-cols-4">
                 {RATINGS.map((rating, i) => (
                   <Button key={rating} variant={RATING_STYLE[rating].variant} className={`flex-col gap-1.5 ${RATING_STYLE[rating].className}`} onClick={() => setSession((s) => rate(s, rating))}>
                     {RATING_STYLE[rating].label}

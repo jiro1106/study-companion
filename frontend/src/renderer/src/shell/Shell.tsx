@@ -64,7 +64,7 @@ export function Shell(): React.JSX.Element {
       <div className="flex h-full">
         <div className="grid min-w-0 flex-1 grid-cols-[72px_minmax(0,1fr)] wide:grid-cols-[232px_minmax(0,1fr)]">
           <Sidebar />
-          <main className="min-h-0 overflow-y-auto">
+          <main className="@container min-h-0 overflow-y-auto">
             <CurrentScreen />
           </main>
         </div>

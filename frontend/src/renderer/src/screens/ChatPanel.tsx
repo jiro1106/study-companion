@@ -64,7 +64,7 @@ export function ChatPanel({ documentId, documentTitle }: { documentId: string; d
   }
 
   return (
-    <aside aria-label="Ask about this PDF" className="grid min-h-[420px] grid-rows-[auto_1fr_auto] border-t-2 border-border mid:min-h-0 mid:border-t-0 mid:border-l-2">
+    <aside aria-label="Ask about this PDF" className="grid min-h-[420px] grid-rows-[auto_1fr_auto] border-t-2 border-border @min-[860px]:min-h-0 @min-[860px]:border-t-0 @min-[860px]:border-l-2">
       <div className="grid gap-1 border-b-2 border-border px-5 py-4">
         <b>Ask about this PDF</b>
         <span className="text-[13px] text-fg-muted">Answers come only from your notes, with page numbers.</span>
