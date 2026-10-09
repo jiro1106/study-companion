@@ -1,4 +1,4 @@
-# BARDHIE Desktop
+# BARDHIE Desktop (frontend)
 
 BARDHIE is a cross-platform Electron desktop application. Phase 0 provides a secure development shell that runs from one codebase on macOS and Windows.
 
@@ -6,6 +6,8 @@ BARDHIE is a cross-platform Electron desktop application. Phase 0 provides a sec
 
 - Git
 - Node.js 24 (npm is included)
+
+Node is pinned in frontend/.nvmrc. With fnm (https://github.com/Schniz/fnm) installed, run fnm install once in frontend/ and it switches automatically.
 
 Verify Node after installing it:
 
@@ -36,6 +38,7 @@ git switch feature/desktop
 Open Terminal in the project folder and run:
 
 ```sh
+cd frontend
 npm install
 npm run dev
 ```
@@ -47,6 +50,7 @@ A native BARDHIE window should open and display `Platform: darwin`. Keep the Ter
 Open PowerShell in the project folder and run:
 
 ```powershell
+cd frontend
 npm install
 npm run dev
 ```
@@ -56,6 +60,8 @@ A native BARDHIE window should open and display `Platform: win32`. Keep PowerShe
 ## Verify your setup
 
 Run these before sharing changes:
+
+Run these from the frontend folder.
 
 ```sh
 npm test
@@ -72,7 +78,7 @@ Test once on a Mac and once on a Windows machine:
 1. Run `npm run dev`.
 2. Confirm a normal, resizable BARDHIE window opens.
 3. Confirm the displayed platform is `darwin` on macOS or `win32` on Windows.
-4. Change text in `src/renderer/src/App.tsx`, save it, and confirm the window hot-reloads.
+4. Change text in `frontend/src/renderer/src/App.tsx`, save it, and confirm the window hot-reloads.
 5. Restore the text before committing.
 
 ## Phase 0 boundaries
