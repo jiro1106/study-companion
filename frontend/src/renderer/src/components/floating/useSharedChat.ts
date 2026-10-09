@@ -10,9 +10,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChatMessage } from '../../types/assistant'
+import { describeLearner, loadProfile } from '../../profile'
 import { sendAiChat, type AiMessage } from '../../services/ai'
 
-const STORAGE_KEY = 'bardy:chat:v1'
+export const STORAGE_KEY = 'bardy:chat:v1'
 /** A remote "busy" flag older than this is treated as stale (e.g. its window closed). */
 const BUSY_TTL_MS = 20000
 
@@ -20,6 +21,12 @@ const SYSTEM_PROMPT =
   'You are Bardy, a friendly, ultra-knowledgeable desktop study companion bird. ' +
   'Help the user with active recall, concise explanations, study tips, flashcards, and motivation. ' +
   'Keep replies engaging, clear, and appropriately concise for a desktop widget.'
+
+/** Read at send time so profile edits apply in both windows without a reload. */
+function systemPrompt(): string {
+  const profile = loadProfile()
+  return profile ? `${SYSTEM_PROMPT} ${describeLearner(profile)}` : SYSTEM_PROMPT
+}
 
 const RESET_RE =
   /^\W*(?:please\s+)?(?:let'?s\s+)?(?:(?:reset|restart|clear|forget|wipe)\b.{0,30}|start\s+(?:over|again|fresh)\b.{0,20}|(?:new|fresh)\s+(?:chat|convo|conversation)\b.{0,10})\W*$/i
@@ -160,7 +167,7 @@ export function useSharedChat({ onActivity }: Options = {}): SharedChat {
       try {
         const full = await sendAiChat({
           messages: history,
-          systemPrompt: SYSTEM_PROMPT,
+          systemPrompt: systemPrompt(),
           stream: true,
           signal: controller.signal,
           onChunk: (_chunk, fullText) => {

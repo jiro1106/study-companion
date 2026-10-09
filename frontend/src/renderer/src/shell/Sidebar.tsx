@@ -6,13 +6,16 @@ import {
   MessageSquareText,
   PanelLeftClose,
   PanelLeftOpen,
-  Search
+  Search,
+  Settings
 } from 'lucide-react'
+import { useState } from 'react'
 
 import { ICON } from '../ui/icon'
 import { Kbd } from '../ui/Kbd'
 import { useNavigation, type ScreenName } from './navigation'
 import { MascotToggle } from './MascotToggle'
+import { SettingsDialog } from './SettingsDialog'
 import { ThemeToggle } from './ThemeToggle'
 
 const NAV: Array<{ screen: ScreenName; label: string; Icon: typeof Home }> = [
@@ -34,6 +37,7 @@ export function Sidebar({
   onToggle: () => void
 }): React.JSX.Element {
   const { route, navigate, openQuickAsk } = useNavigation()
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <aside
@@ -89,6 +93,16 @@ export function Sidebar({
         <MascotToggle compact={compact} />
         <button
           type="button"
+          onClick={() => setSettingsOpen(true)}
+          title="Settings"
+          aria-label="Settings"
+          className={`flex w-full cursor-pointer items-center gap-2 rounded-control py-2 text-[13px] font-extrabold text-fg-muted hover:bg-surface-2 ${compact ? 'justify-center px-0' : 'px-3'}`}
+        >
+          <Settings {...ICON} size={18} className="shrink-0" />
+          {!compact && <span className="truncate">Settings</span>}
+        </button>
+        <button
+          type="button"
           onClick={openQuickAsk}
           title={`Quick ask (${QUICK_ASK_KEYS})`}
           aria-label="Quick ask"
@@ -99,6 +113,7 @@ export function Sidebar({
           {!compact && <Kbd>{QUICK_ASK_KEYS}</Kbd>}
         </button>
       </div>
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </aside>
   )
 }

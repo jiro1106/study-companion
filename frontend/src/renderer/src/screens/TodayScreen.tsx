@@ -1,6 +1,7 @@
 import { Brain, Flame, Sparkles, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
+import { useProfile } from '../profile'
 import { api, toApiError, type Deck, type TodayStats } from '../data'
 import { useResource } from '../data/use-resource'
 import { PAGE } from '../ui/page'
@@ -83,6 +84,7 @@ function DeckRow({ deck, onOpen, onDelete }: { deck: Deck; onOpen: () => void; o
 
 export function TodayScreen(): React.JSX.Element {
   const { navigate } = useNavigation()
+  const { profile } = useProfile()
   const today = useResource<TodayStats>(() => api.getToday(), [])
   const decks = useResource<Deck[]>(() => api.listDecks(), [])
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -114,7 +116,7 @@ export function TodayScreen(): React.JSX.Element {
         {(stats) => (
           <ScreenHeader
             eyebrow={now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-            title={stats.dueCount > 0 ? <>{greeting(now)}, {stats.userName}. <span className="text-primary-ink">{stats.dueCount} cards</span> are waiting.</> : <>{greeting(now)}, {stats.userName}.</>}
+            title={stats.dueCount > 0 ? <>{greeting(now)}, {profile.name}. <span className="text-primary-ink">{stats.dueCount} cards</span> are waiting.</> : <>{greeting(now)}, {profile.name}.</>}
             actions={<Button onClick={() => navigate({ screen: 'library' })}>+ Add PDF</Button>}
           />
         )}
@@ -127,16 +129,16 @@ export function TodayScreen(): React.JSX.Element {
               <>
                 <div className="grid items-center gap-5 rounded-[20px] border-2 border-b-[6px] border-primary bg-primary-wash p-6 @min-[860px]:grid-cols-[1fr_auto]">
                   <div className="grid gap-3">
-                    <span className="text-[13px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Daily goal · {stats.goalMinutes} min</span>
+                    <span className="text-[13px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Daily goal · {profile.goalMinutes} min</span>
                     <h2 className="font-display text-[26px] leading-tight font-black text-fg">
-                      {stats.minutesToday >= stats.goalMinutes ? 'Goal reached. Nice work!' : `${stats.minutesToday} of ${stats.goalMinutes} minutes done. One more review gets you there.`}
+                      {stats.minutesToday >= profile.goalMinutes ? 'Goal reached. Nice work!' : `${stats.minutesToday} of ${profile.goalMinutes} minutes done. One more review gets you there.`}
                     </h2>
                     <div className="flex flex-wrap gap-3">
                       <Button disabled={stats.dueCount === 0} onClick={() => navigate({ screen: 'cards' })}>{stats.dueCount > 0 ? `Review ${stats.dueCount} cards` : 'No cards due'}</Button>
                       <Button variant="ghost" onClick={() => navigate({ screen: 'quiz' })}>Take a quiz</Button>
                     </div>
                   </div>
-                  <GoalRing value={Math.min(1, stats.minutesToday / stats.goalMinutes)} />
+                  <GoalRing value={Math.min(1, stats.minutesToday / profile.goalMinutes)} />
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {[
