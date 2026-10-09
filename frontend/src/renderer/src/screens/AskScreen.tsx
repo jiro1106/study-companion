@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { api, type StudyDocument } from '../data'
+import { api, type Deck, type StudyDocument } from '../data'
 import { useResource } from '../data/use-resource'
 import { useNavigation } from '../shell/navigation'
 import { Button } from '../ui/Button'
@@ -30,7 +30,8 @@ function DocumentView({ doc }: { doc: StudyDocument }): React.JSX.Element {
   const { navigate } = useNavigation()
   const [view, setView] = useState<View>('summary')
   const summary = doc.summary
-  const deckId = doc.cardCount > 0 ? `deck-${doc.id.replace('doc-', '')}` : undefined
+  const decks = useResource<Deck[]>(() => api.listDecks(), [doc.id])
+  const deckId = decks.status === 'ready' ? decks.data.find((d) => d.sourceDocumentId === doc.id)?.id : undefined
 
   return (
     <div className="grid min-h-full mid:h-full mid:grid-cols-[minmax(0,1fr)_380px]">

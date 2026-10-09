@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { app, BrowserWindow, screen } from 'electron'
 
@@ -31,7 +31,9 @@ function saveWindowState(window: BrowserWindow): void {
     isFullScreen: window.isFullScreen()
   }
   try {
-    writeFileSync(windowStatePath(), serializeWindowState(state))
+    const file = windowStatePath()
+    writeFileSync(`${file}.tmp`, serializeWindowState(state))
+    renameSync(`${file}.tmp`, file)
   } catch (error) {
     console.error('Could not save BARDHIE window state', error)
   }

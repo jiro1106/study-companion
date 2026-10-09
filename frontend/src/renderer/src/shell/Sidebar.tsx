@@ -14,7 +14,7 @@ const NAV: Array<{ screen: ScreenName; label: string; Icon: typeof Home }> = [
   { screen: 'quiz', label: 'Quiz', Icon: CircleHelp }
 ]
 
-const isMac = window.bardhie.platform === 'darwin'
+const isMac = window.bardhie?.platform === 'darwin'
 export const QUICK_ASK_KEYS = isMac ? '⌘ ⇧ Space' : 'Ctrl Shift Space'
 
 export function Sidebar(): React.JSX.Element {
@@ -40,7 +40,7 @@ export function Sidebar(): React.JSX.Element {
             title={label}
             aria-label={label}
             aria-current={route.screen === screen ? 'page' : undefined}
-            onClick={() => navigate({ screen } as Parameters<typeof navigate>[0])}
+            onClick={() => navigate({ screen })}
             className="flex w-full cursor-pointer items-center justify-center gap-3.5 rounded-control border-2 border-transparent px-3 py-2.5 text-sm font-extrabold tracking-[0.053em] text-fg-muted uppercase hover:bg-surface-2 aria-[current=page]:border-link/55 aria-[current=page]:bg-link/10 aria-[current=page]:text-link wide:justify-start"
           >
             <Icon {...ICON} size={24} className="shrink-0" />

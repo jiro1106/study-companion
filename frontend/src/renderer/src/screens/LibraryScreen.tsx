@@ -6,6 +6,7 @@ import { useResource } from '../data/use-resource'
 import { PAGE } from '../ui/page'
 import { useNavigation } from '../shell/navigation'
 import { Button } from '../ui/Button'
+import { EmptyState } from '../ui/EmptyState'
 import { ICON } from '../ui/icon'
 import { Pill } from '../ui/Pill'
 import { ProgressBar } from '../ui/ProgressBar'
@@ -89,7 +90,7 @@ export function LibraryScreen(): React.JSX.Element {
         resource={documents}
         loading={<div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-52 rounded-card" />)}</div>}
         isEmpty={(list) => list.length === 0}
-        empty={<p className="text-center text-fg-muted">Your library is empty. PDFs you add show up here.</p>}
+        empty={<EmptyState title="Your library is empty" body="PDFs you add show up here, ready to turn into cards and quizzes." />}
       >
         {(list) => (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">

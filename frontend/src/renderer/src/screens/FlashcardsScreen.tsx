@@ -35,7 +35,7 @@ function Session({ cards }: { cards: Flashcard[] }): React.JSX.Element {
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent): void {
-      if (isTyping(event.target) || event.metaKey || event.ctrlKey || document.querySelector('dialog[open]')) return
+      if (isTyping(event.target) || event.metaKey || event.ctrlKey || event.repeat || document.querySelector('dialog[open]')) return
       if (event.code === 'Space') {
         if (isButton(event.target)) return
         event.preventDefault()

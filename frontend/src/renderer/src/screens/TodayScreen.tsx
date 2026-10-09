@@ -191,7 +191,7 @@ export function TodayScreen(): React.JSX.Element {
                   {stats.weekDone.map((done, i) => (
                     <li key={i} className="grid justify-items-center gap-1.5 text-[11px] font-extrabold text-fg-muted">
                       {DAY_LETTERS[i]}
-                      <span className={`grid size-[30px] place-items-center rounded-full border-2 ${done ? 'border-streak bg-streak text-white' : i === stats.todayIndex ? 'border-streak text-streak' : 'border-border text-fg-faint'}`}>
+                      <span className={`grid size-[30px] place-items-center rounded-full border-2 ${done ? 'border-streak bg-streak text-on-primary' : i === stats.todayIndex ? 'border-streak text-streak' : 'border-border text-fg-faint'}`}>
                         {done ? '✓' : i === stats.todayIndex ? '!' : ''}
                       </span>
                     </li>
@@ -213,7 +213,7 @@ export function TodayScreen(): React.JSX.Element {
                     return (
                       <li key={exam.id} className="grid grid-cols-[auto_1fr] items-center gap-3">
                         <div className="w-12 overflow-hidden rounded-[10px] border-2 border-border text-center">
-                          <span className="block bg-danger py-1 text-[10px] leading-none font-extrabold tracking-wider text-white uppercase">{date.toLocaleDateString(undefined, { month: 'short' })}</span>
+                          <span className="block bg-danger py-1 text-[10px] leading-none font-extrabold tracking-wider text-on-primary uppercase">{date.toLocaleDateString(undefined, { month: 'short' })}</span>
                           <b className="block font-display text-xl leading-[1.4] font-black">{date.getDate()}</b>
                         </div>
                         <div className="min-w-0">

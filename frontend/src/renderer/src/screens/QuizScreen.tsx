@@ -32,8 +32,8 @@ function Quiz({ questions }: { questions: QuizQuestion[] }): React.JSX.Element {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent): void {
       const target = event.target instanceof HTMLElement ? event.target : null
-      if (target?.matches('input, textarea') || event.metaKey || event.ctrlKey || document.querySelector('dialog[open]')) return
-      if (/^[1-4]$/.test(event.key)) setSession((s) => select(s, Number(event.key) - 1))
+      if (target?.matches('input, textarea') || event.metaKey || event.ctrlKey || event.repeat || document.querySelector('dialog[open]')) return
+      if (/^[1-4]$/.test(event.key)) setSession((s) => select(s, Number(event.key) - 1, questions[s.index]?.options.length))
       if (event.key === 'Enter' && !target?.matches('button')) setSession((s) => (isFinished(s) ? s : s.checked ? next(s) : check(s, questions[s.index].correctIndex)))
     }
     window.addEventListener('keydown', onKeyDown)
@@ -65,9 +65,9 @@ function Quiz({ questions }: { questions: QuizQuestion[] }): React.JSX.Element {
         <div className="grid w-full max-w-[640px] gap-5">
           <span className="text-[13px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">Multiple choice</span>
           <h2 className="font-display text-[26px] leading-tight font-black">{question.prompt}</h2>
-          <div className="grid gap-2.5" role="group" aria-label="Answers">
+          <div className="grid gap-2.5" role="radiogroup" aria-label="Answers">
             {question.options.map((option, i) => (
-              <button key={option} type="button" aria-pressed={session.selected === i} disabled={session.checked} onClick={() => setSession((s) => select(s, i))} className={`flex w-full cursor-pointer items-center gap-3 rounded-control border-2 border-b-4 px-4 py-3.5 text-left text-[17px] font-semibold disabled:cursor-default ${optionClass(session, i, question.correctIndex)}`}>
+              <button key={option} type="button" role="radio" aria-checked={session.selected === i} disabled={session.checked} onClick={() => setSession((s) => select(s, i))} className={`flex w-full cursor-pointer items-center gap-3 rounded-control border-2 border-b-4 px-4 py-3.5 text-left text-[17px] font-semibold disabled:cursor-default ${optionClass(session, i, question.correctIndex)}`}>
                 <span className="grid size-[30px] shrink-0 place-items-center rounded-lg border-2 border-current/30 text-[13px] font-extrabold text-fg-muted">{i + 1}</span>
                 {option}
               </button>

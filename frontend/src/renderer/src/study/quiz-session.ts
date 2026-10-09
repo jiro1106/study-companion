@@ -14,8 +14,8 @@ export function isFinished(session: QuizSession): boolean {
   return session.index >= session.total
 }
 
-export function select(session: QuizSession, option: number): QuizSession {
-  if (session.checked || isFinished(session)) return session
+export function select(session: QuizSession, option: number, optionCount = Infinity): QuizSession {
+  if (session.checked || isFinished(session) || option >= optionCount) return session
   return { ...session, selected: option }
 }
 
