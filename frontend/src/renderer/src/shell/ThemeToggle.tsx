@@ -1,33 +1,31 @@
-import { Monitor, Moon, Sun } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
 import { useState } from 'react'
 
 import { ICON } from '../ui/icon'
 
-type Theme = 'system' | 'light' | 'dark'
+type Theme = 'light' | 'dark'
 
-const ORDER: Theme[] = ['system', 'light', 'dark']
 const META = {
-  system: { label: 'System', Icon: Monitor },
   light: { label: 'Light', Icon: Sun },
   dark: { label: 'Dark', Icon: Moon }
 } as const
 
+// Saved choice wins; otherwise start from the OS setting.
 function load(): Theme {
   try {
     const saved = localStorage.getItem('theme')
     if (saved === 'light' || saved === 'dark') return saved
   } catch {
-    // storage unavailable: follow the OS
+    // storage unavailable: fall through to the OS setting
   }
-  return 'system'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
 function apply(theme: Theme): void {
-  if (theme === 'system') document.documentElement.removeAttribute('data-theme')
-  else document.documentElement.dataset.theme = theme
+  document.documentElement.dataset.theme = theme
 }
 
-// Runs at import so the saved theme is set before the first render.
+// Runs at import so the theme is set before the first render.
 apply(load())
 
 export function ThemeToggle(): React.JSX.Element {
@@ -35,11 +33,10 @@ export function ThemeToggle(): React.JSX.Element {
   const { label, Icon } = META[theme]
 
   function next(): void {
-    const t = ORDER[(ORDER.indexOf(theme) + 1) % ORDER.length]
+    const t: Theme = theme === 'light' ? 'dark' : 'light'
     apply(t)
     try {
-      if (t === 'system') localStorage.removeItem('theme')
-      else localStorage.setItem('theme', t)
+      localStorage.setItem('theme', t)
     } catch {
       // not persisted; still applies for this session
     }
