@@ -81,7 +81,7 @@ export function LibraryScreen(): React.JSX.Element {
       <div className="grid justify-items-center gap-2.5 rounded-[20px] border-2 border-dashed border-border-strong bg-surface-2 p-7 text-center">
         <Upload {...ICON} size={44} className="text-primary" />
         <b className="text-lg">Drop a PDF here</b>
-        <p className="max-w-[52ch] text-[13px] text-fg-muted">Lecture slides, readings, or your own notes. BARDHIE reads them on this computer and makes a summary, flashcards, and quizzes.</p>
+        <p className="max-w-[52ch] text-[13px] text-fg-muted">Lecture slides, readings, or your own notes. Bardy reads them on this computer and makes a summary, flashcards, and quizzes.</p>
         <Button disabled title="PDF import arrives with the study engine">Choose file</Button>
         <span className="text-[12px] text-fg-faint">Importing PDFs arrives with the study engine.</span>
       </div>

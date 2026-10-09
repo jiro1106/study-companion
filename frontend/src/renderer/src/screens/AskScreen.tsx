@@ -47,7 +47,7 @@ function DocumentView({ doc }: { doc: StudyDocument }): React.JSX.Element {
           )}
         />
         {!summary ? (
-          <EmptyState awake={false} title="Still reading this PDF" body={`BARDHIE is on page ${doc.processing?.currentPage ?? 1} of ${doc.pageCount}. The summary and chat open when it’s done.`} action={<Button variant="secondary" onClick={() => navigate({ screen: 'library' })}>Back to library</Button>} />
+          <EmptyState awake={false} title="Still reading this PDF" body={`Bardy is on page ${doc.processing?.currentPage ?? 1} of ${doc.pageCount}. The summary and chat open when it’s done.`} action={<Button variant="secondary" onClick={() => navigate({ screen: 'library' })}>Back to library</Button>} />
         ) : (
           <>
             <Tabs<View> label="Document view" value={view} onChange={setView} items={[{ id: 'summary', label: 'Summary' }, { id: 'original', label: 'Original' }]} />
@@ -88,7 +88,7 @@ export function AskScreen(): React.JSX.Element {
       resource={documents}
       loading={<div className="grid gap-4 px-8 pt-7"><Skeleton className="h-16" /><Skeleton className="h-64 rounded-card" /></div>}
       isEmpty={(list) => list.length === 0}
-      empty={<div className="px-8"><EmptyState title="Nothing to ask about yet" body="Add a PDF to your library, then ask BARDHIE anything about it." action={<Button onClick={() => navigate({ screen: 'library' })}>Go to library</Button>} /></div>}
+      empty={<div className="px-8"><EmptyState title="Nothing to ask about yet" body="Add a PDF to your library, then ask Bardy anything about it." action={<Button onClick={() => navigate({ screen: 'library' })}>Go to library</Button>} /></div>}
     >
       {(list) => {
         const doc = list.find((d) => d.id === requestedId) ?? list.find((d) => d.summary !== null) ?? list[0]

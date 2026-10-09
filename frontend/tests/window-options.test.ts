@@ -12,7 +12,7 @@ test('uses secure desktop window options', () => {
   assert.equal(windowOptions.minWidth, MIN_WIDTH)
   assert.equal(windowOptions.minHeight, MIN_HEIGHT)
   assert.equal(windowOptions.resizable, true)
-  assert.equal(windowOptions.title, 'BARDHIE')
+  assert.equal(windowOptions.title, 'Bardy')
   assert.equal(windowOptions.webPreferences.contextIsolation, true)
   assert.equal(windowOptions.webPreferences.nodeIntegration, false)
   assert.equal(windowOptions.webPreferences.sandbox, true)

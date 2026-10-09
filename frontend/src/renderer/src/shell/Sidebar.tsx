@@ -5,6 +5,7 @@ import { ICON } from '../ui/icon'
 import { Kbd } from '../ui/Kbd'
 import { Mascot } from '../ui/Mascot'
 import { useNavigation, type ScreenName } from './navigation'
+import { ThemeToggle } from './ThemeToggle'
 
 const NAV: Array<{ screen: ScreenName; label: string; Icon: typeof Home }> = [
   { screen: 'today', label: 'Today', Icon: Home },
@@ -22,14 +23,15 @@ export function Sidebar(): React.JSX.Element {
 
   return (
     <aside className="flex min-h-0 flex-col gap-5 overflow-y-auto border-r-2 border-border px-3 py-5">
-      <div className="flex items-center justify-center gap-2 wide:justify-start wide:px-3">
+      <div className="flex flex-col items-center gap-2 wide:flex-row wide:justify-between wide:pl-3">
         <span
           className="font-display text-[28px] leading-none font-black tracking-[-0.02em] text-primary"
-          aria-label="bardhie"
+          aria-label="Bardy"
         >
-          <span className="hidden wide:inline">bardhie</span>
+          <span className="hidden wide:inline">Bardy</span>
           <span className="wide:hidden">b</span>
         </span>
+        <ThemeToggle />
       </div>
 
       <nav aria-label="Main" className="grid gap-1">

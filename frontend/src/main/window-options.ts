@@ -6,7 +6,7 @@ export const windowOptions = {
   minWidth: 720,
   minHeight: 520,
   resizable: true,
-  title: 'BARDHIE',
+  title: 'Bardy',
   webPreferences: {
     contextIsolation: true,
     nodeIntegration: false,

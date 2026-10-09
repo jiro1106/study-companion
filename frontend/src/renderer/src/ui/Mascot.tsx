@@ -48,7 +48,7 @@ export function Mascot({
       height={(size * 18) / 16}
       shapeRendering="crispEdges"
       role="img"
-      aria-label={awake ? 'BARDHIE mascot, awake' : 'BARDHIE mascot, asleep'}
+      aria-label={awake ? 'Bardy mascot, awake' : 'Bardy mascot, asleep'}
     >
       {rows.flatMap((row, y) =>
         [...row].map((key, x) =>

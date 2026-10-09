@@ -24,7 +24,7 @@ function Bubble({ message }: { message: ChatMessage }): React.JSX.Element {
     <div className="max-w-[92%] justify-self-end rounded-2xl rounded-br-sm border-2 border-link/40 bg-link/15 px-3.5 py-3 text-[15px]">{message.text}</div>
   ) : (
     <div className="grid max-w-[92%] gap-2 justify-self-start rounded-2xl rounded-bl-sm border-2 border-border px-3.5 py-3 text-[15px]">
-      <span className="text-[12px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Bardhie</span>
+      <span className="text-[12px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Bardy</span>
       <p>{message.text}<Citations pages={message.citedPages} /></p>
     </div>
   )

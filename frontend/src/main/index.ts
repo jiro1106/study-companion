@@ -35,7 +35,7 @@ function saveWindowState(window: BrowserWindow): void {
     writeFileSync(`${file}.tmp`, serializeWindowState(state))
     renameSync(`${file}.tmp`, file)
   } catch (error) {
-    console.error('Could not save BARDHIE window state', error)
+    console.error('Could not save Bardy window state', error)
   }
 }
 
@@ -67,7 +67,7 @@ export async function createWindow(): Promise<BrowserWindow> {
 }
 
 function handleStartupError(error: unknown): void {
-  console.error('Failed to start BARDHIE', error)
+  console.error('Failed to start Bardy', error)
   app.exit(1)
 }
 

@@ -13,7 +13,7 @@ export class ApiError extends Error {
   }
 }
 
-export const OFFLINE_MESSAGE = "Couldn't reach BARDHIE's study engine. Check that it's running, then try again."
+export const OFFLINE_MESSAGE = "Couldn't reach Bardy's study engine. Check that it's running, then try again."
 
 export function toApiError(error: unknown): ApiError {
   return error instanceof ApiError ? error : new ApiError('unknown', 'Something went wrong. Try again.')

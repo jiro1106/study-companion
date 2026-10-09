@@ -169,7 +169,7 @@ export function TodayScreen(): React.JSX.Element {
               resource={decks}
               loading={<div className="grid gap-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 rounded-card" />)}</div>}
               isEmpty={(list) => list.length === 0}
-              empty={<EmptyState title="No decks yet" body="Add a PDF to your library and BARDHIE turns it into flashcards and quizzes." action={<Button onClick={() => navigate({ screen: 'library' })}>Go to library</Button>} />}
+              empty={<EmptyState title="No decks yet" body="Add a PDF to your library and Bardy turns it into flashcards and quizzes." action={<Button onClick={() => navigate({ screen: 'library' })}>Go to library</Button>} />}
             >
               {(list) => (
                 <div className="grid gap-3">
@@ -230,7 +230,7 @@ export function TodayScreen(): React.JSX.Element {
 
           <Card className="bg-surface-2">
             <span className="text-[13px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">Tip</span>
-            <p className="text-[13px]">Press <Kbd>{QUICK_ASK_KEYS}</Kbd> to ask BARDHIE about your notes without leaving what you’re doing.</p>
+            <p className="text-[13px] leading-relaxed">Press <Kbd>{QUICK_ASK_KEYS}</Kbd> to ask Bardy about your notes without leaving what you’re doing.</p>
           </Card>
         </div>
       </div>

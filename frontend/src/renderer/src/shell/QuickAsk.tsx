@@ -61,7 +61,7 @@ export function QuickAsk({ open, onClose }: { open: boolean; onClose: () => void
         )}
         {answer && !pending && (
           <div className="grid gap-2 rounded-2xl border-2 border-border px-3.5 py-3 text-[15px]" aria-live="polite">
-            <span className="text-[12px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Bardhie</span>
+            <span className="text-[12px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Bardy</span>
             <p>{answer.text} {answer.citedPages.map((p) => <span key={p} className="rounded-md border-2 border-link/50 px-1.5 py-0.5 text-[11px] font-extrabold text-link">p. {p}</span>)}</p>
           </div>
         )}
