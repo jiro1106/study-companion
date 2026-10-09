@@ -6,6 +6,8 @@
   "scripts": {
     "predev": "install-electron",
     "dev": "electron-vite dev",
+    "dev:slow": "npm run dev -- --mode slow",
+    "dev:error": "npm run dev -- --mode error",
     "test": "node --test tests/*.test.ts",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
