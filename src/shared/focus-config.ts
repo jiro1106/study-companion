@@ -9,6 +9,32 @@ export const DISPLAY_BLOCKED_SITES = [
   'Twitter / X'
 ]
 
+export const FIREWALL_RULE_PREFIX = 'BARDHIE Focus Block'
+
+/**
+ * True when a browser window/tab title is one of the blocked social sites.
+ * Used to close already-open tabs when Focus Mode turns on.
+ */
+export function isBlockedBrowserTitle(title: string): boolean {
+  const t = title.trim()
+  if (!t) return false
+
+  if (/facebook/i.test(t)) return true
+  if (/tiktok/i.test(t)) return true
+  if (/instagram/i.test(t)) return true
+  if (/messenger/i.test(t)) return true
+  if (/\btwitter\b/i.test(t)) return true
+
+  // X.com titles: "X", "Home / X", "(3) Home / X - Google Chrome"
+  if (/\bX\s*[-–—|]\s*(Google Chrome|Microsoft Edge|Firefox|Brave|Opera|Vivaldi|Mozilla Firefox)/i.test(t)) {
+    return true
+  }
+  if (/\/\s*X(\s*[-–—|]|\s*$)/.test(t)) return true
+  if (/^(\(\d+\)\s*)?X(\s*[-–—|]|\s*$)/.test(t)) return true
+
+  return false
+}
+
 export const BLOCKED_DOMAINS = [
   // ─── Facebook ──────────────────────────────────────────────────────────────
   'facebook.com',
