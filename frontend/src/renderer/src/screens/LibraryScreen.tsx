@@ -1,7 +1,7 @@
 import { Trash2, Upload } from 'lucide-react'
 import { useState } from 'react'
 
-import { api, type StudyDocument } from '../data'
+import { api, toApiError, type StudyDocument } from '../data'
 import { useResource } from '../data/use-resource'
 import { PAGE } from '../ui/page'
 import { useNavigation } from '../shell/navigation'
@@ -61,12 +61,14 @@ function DocumentCard({ doc, onOpen, onDelete }: { doc: StudyDocument; onOpen: (
 export function LibraryScreen(): React.JSX.Element {
   const { navigate } = useNavigation()
   const documents = useResource<StudyDocument[]>(() => api.listDocuments(), [])
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   async function deleteDocument(id: string): Promise<void> {
+    setDeleteError(null)
     try {
       await api.deleteDocument(id)
-    } catch {
-      // The reload below surfaces the failure as the screen's error state.
+    } catch (e) {
+      setDeleteError(toApiError(e).message)
     } finally {
       documents.reload()
     }
@@ -82,6 +84,7 @@ export function LibraryScreen(): React.JSX.Element {
         <Button disabled title="PDF import arrives with the study engine">Choose file</Button>
         <span className="text-[12px] text-fg-faint">Importing PDFs arrives with the study engine.</span>
       </div>
+      {deleteError && <p role="alert" className="rounded-control bg-danger-wash px-3.5 py-2.5 text-[14px]">{deleteError}</p>}
       <ResourceView
         resource={documents}
         loading={<div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-52 rounded-card" />)}</div>}

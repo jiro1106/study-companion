@@ -35,6 +35,7 @@ export function ChatPanel({ documentId, documentTitle }: { documentId: string; d
   const [pending, setPending] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  const [failed, setFailed] = useState('')
   const logRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export function ChatPanel({ documentId, documentTitle }: { documentId: string; d
       history.reload()
     } catch (e) {
       setError(toApiError(e).message)
+      setFailed(question)
     } finally {
       setPending(null)
     }
@@ -78,7 +80,12 @@ export function ChatPanel({ documentId, documentTitle }: { documentId: string; d
                   <div className="justify-self-start rounded-2xl border-2 border-border px-3.5 py-3 text-[15px] text-fg-muted">Thinking…</div>
                 </>
               )}
-              {error && <p role="alert" className="rounded-control bg-danger-wash px-3.5 py-2.5 text-[14px] text-fg">{error}</p>}
+              {error && (
+                <div role="alert" className="flex items-center justify-between gap-3 rounded-control bg-danger-wash px-3.5 py-2.5 text-[14px] text-fg">
+                  <span>{error}</span>
+                  <Button variant="secondary" onClick={() => void send(failed)} disabled={pending !== null}>Try again</Button>
+                </div>
+              )}
               {messages.length === 0 && pending === null && <p className="text-[14px] text-fg-muted">Ask anything about {documentTitle}. Try one of these:</p>}
               <div className="flex flex-wrap gap-2">
                 {SUGGESTIONS.map((s) => (

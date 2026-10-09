@@ -18,11 +18,16 @@ export function QuickAsk({ open, onClose }: { open: boolean; onClose: () => void
     if (!open && dialog.open) dialog.close()
   }, [open])
 
-  async function onSubmit(event: FormEvent): Promise<void> {
+  function onSubmit(event: FormEvent): void {
     event.preventDefault()
+    void ask()
+  }
+
+  async function ask(): Promise<void> {
     if (pending || !question.trim()) return
     setPending(true)
     setError(null)
+    setAnswer(null)
     try {
       setAnswer(await api.ask(null, question))
     } catch (e) {
@@ -48,7 +53,12 @@ export function QuickAsk({ open, onClose }: { open: boolean; onClose: () => void
         <label htmlFor="quick-ask-input" className="sr-only">Question</label>
         <input id="quick-ask-input" autoFocus value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Ask anything from your notes…" autoComplete="off" className="w-full rounded-control border-2 border-border bg-surface-2 px-3.5 py-3 text-base placeholder:text-fg-faint focus:border-link focus:bg-surface focus:outline-none" />
         {pending && <p className="text-[14px] text-fg-muted" aria-live="polite">Thinking…</p>}
-        {error && <p role="alert" className="rounded-control bg-danger-wash px-3.5 py-2.5 text-[14px]">{error}</p>}
+        {error && (
+          <div role="alert" className="flex items-center justify-between gap-3 rounded-control bg-danger-wash px-3.5 py-2.5 text-[14px]">
+            <span>{error}</span>
+            <Button variant="secondary" onClick={() => void ask()} disabled={pending}>Try again</Button>
+          </div>
+        )}
         {answer && !pending && (
           <div className="grid gap-2 rounded-2xl border-2 border-border px-3.5 py-3 text-[15px]" aria-live="polite">
             <span className="text-[12px] font-extrabold tracking-[0.053em] text-primary-ink uppercase">Bardhie</span>

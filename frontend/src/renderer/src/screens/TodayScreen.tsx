@@ -1,7 +1,7 @@
 import { Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
-import { api, type Deck, type Exam, type TodayStats } from '../data'
+import { api, toApiError, type Deck, type Exam, type TodayStats } from '../data'
 import { useResource } from '../data/use-resource'
 import { PAGE } from '../ui/page'
 import { QUICK_ASK_KEYS } from '../shell/Sidebar'
@@ -90,6 +90,7 @@ export function TodayScreen(): React.JSX.Element {
   const today = useResource<TodayStats>(() => api.getToday(), [])
   const decks = useResource<Deck[]>(() => api.listDecks(), [])
   const exams = useResource<Exam[]>(() => api.listExams(), [])
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const now = new Date()
 
   if (today.status === 'error') {
@@ -101,10 +102,11 @@ export function TodayScreen(): React.JSX.Element {
   }
 
   async function deleteDeck(id: string): Promise<void> {
+    setDeleteError(null)
     try {
       await api.deleteDeck(id)
-    } catch {
-      // The reload below surfaces the failure as the screen's error state.
+    } catch (e) {
+      setDeleteError(toApiError(e).message)
     } finally {
       decks.reload()
       today.reload()
@@ -162,6 +164,7 @@ export function TodayScreen(): React.JSX.Element {
               <h2 id="decks-heading" className="text-[13px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">Your decks</h2>
               <Button variant="ghost" className="px-1 py-1" onClick={() => navigate({ screen: 'library' })}>See library</Button>
             </div>
+            {deleteError && <p role="alert" className="rounded-control bg-danger-wash px-3.5 py-2.5 text-[14px]">{deleteError}</p>}
             <ResourceView
               resource={decks}
               loading={<div className="grid gap-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 rounded-card" />)}</div>}

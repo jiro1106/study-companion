@@ -32,7 +32,7 @@ function Quiz({ questions }: { questions: QuizQuestion[] }): React.JSX.Element {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent): void {
       const target = event.target instanceof HTMLElement ? event.target : null
-      if (target?.matches('input, textarea') || event.metaKey || event.ctrlKey) return
+      if (target?.matches('input, textarea') || event.metaKey || event.ctrlKey || document.querySelector('dialog[open]')) return
       if (/^[1-4]$/.test(event.key)) setSession((s) => select(s, Number(event.key) - 1))
       if (event.key === 'Enter' && !target?.matches('button')) setSession((s) => (isFinished(s) ? s : s.checked ? next(s) : check(s, questions[s.index].correctIndex)))
     }
@@ -87,7 +87,7 @@ function Quiz({ questions }: { questions: QuizQuestion[] }): React.JSX.Element {
             </>
           )}
         </div>
-        <Button variant={session.checked && !right ? 'danger' : 'primary'} disabled={session.selected === null} onClick={advance}>
+        <Button variant={session.checked && !right ? 'danger' : 'primary'} disabled={session.selected === null} onClick={(e) => { if (e.detail < 2) advance() }}>
           {session.checked ? 'Continue' : 'Check'}
         </Button>
       </div>
