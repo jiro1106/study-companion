@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react'
+import { Brain, Flame, Sparkles, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { api, toApiError, type Deck, type Exam, type TodayStats } from '../data'
@@ -147,13 +147,18 @@ export function TodayScreen(): React.JSX.Element {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { value: String(stats.streakDays), label: 'Day streak', color: 'text-streak' },
-                    { value: `${stats.recallPercent}%`, label: 'Recall, 7 days', color: 'text-primary-ink' },
-                    { value: String(stats.cardsMade), label: 'Cards made', color: 'text-link' }
+                    { value: String(stats.streakDays), label: 'Day streak', color: 'text-streak', Icon: Flame },
+                    { value: `${stats.recallPercent}%`, label: 'Recall, 7 days', color: 'text-primary-ink', Icon: Brain },
+                    { value: String(stats.cardsMade), label: 'Cards made', color: 'text-link', Icon: Sparkles }
                   ].map((tile) => (
-                    <div key={tile.label} className="grid min-w-0 gap-0.5 rounded-control border-2 border-border p-3.5">
-                      <b className={`font-display text-[28px] leading-tight font-black tabular-nums ${tile.color}`}>{tile.value}</b>
-                      <span className="text-[11px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">{tile.label}</span>
+                    <div key={tile.label} className={`flex min-w-0 items-center gap-3.5 rounded-control border-2 border-border p-3.5 ${tile.color}`}>
+                      <span className="grid size-11 shrink-0 place-items-center rounded-full bg-current/15">
+                        <tile.Icon aria-hidden className="size-5" />
+                      </span>
+                      <div className="grid min-w-0 gap-0.5">
+                        <b className="font-display text-[28px] leading-none font-black tabular-nums">{tile.value}</b>
+                        <span className="truncate text-[11px] font-extrabold tracking-[0.053em] text-fg-muted uppercase">{tile.label}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
