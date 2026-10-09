@@ -5,6 +5,7 @@ import { useResource } from "../data/use-resource";
 import { api } from "../data";
 import { useNavigation } from "../shell/navigation";
 import { Button } from "../ui/Button";
+import { DocumentPicker } from "../ui/DocumentPicker";
 import { EmptyState } from "../ui/EmptyState";
 import { Pill } from "../ui/Pill";
 import { ResourceView } from "../ui/ResourceView";
@@ -50,6 +51,14 @@ function DocumentView({ doc }: { doc: StudyDocument }): React.JSX.Element {
       className={`grid min-h-full @min-[860px]:h-full ${summary ? "@min-[860px]:grid-cols-[minmax(0,1fr)_380px]" : ""}`}
     >
       <div className="grid content-start gap-5 overflow-y-auto px-8 pt-7 pb-12">
+        <div>
+          <Button
+            variant="secondary"
+            onClick={() => navigate({ screen: "ask" })}
+          >
+            ← All documents
+          </Button>
+        </div>
         <ScreenHeader
           eyebrow={`${doc.fileName} · ${doc.pageCount} pages`}
           title={doc.title}
@@ -160,6 +169,16 @@ export function AskScreen(): React.JSX.Element {
   const requestedId = route.screen === "ask" ? route.documentId : undefined;
   const documents = useResource<StudyDocument[]>(() => api.listDocuments(), []);
 
+  if (!requestedId) {
+    return (
+      <DocumentPicker
+        title="Ask your notes"
+        body="Pick a document to read, summarize, and take notes on."
+        onSelect={(doc) => navigate({ screen: "ask", documentId: doc.id })}
+      />
+    );
+  }
+
   return (
     <ResourceView
       resource={documents}
@@ -185,10 +204,7 @@ export function AskScreen(): React.JSX.Element {
       }
     >
       {(list) => {
-        const doc =
-          list.find((d) => d.id === requestedId) ??
-          list.find((d) => d.summary !== null) ??
-          list[0];
+        const doc = list.find((d) => d.id === requestedId) ?? list[0];
         return <DocumentView key={doc.id} doc={doc} />;
       }}
     </ResourceView>

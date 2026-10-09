@@ -67,15 +67,16 @@ export function LibraryScreen(): React.JSX.Element {
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
+  const processingIds = documents.status === 'ready'
+    ? documents.data.filter((document) => document.processing !== null).map((document) => document.id).join(',')
+    : ''
 
   // Poll while any document is still processing
   useEffect(() => {
-    if (documents.status !== 'ready') return
-    const anyProcessing = documents.data.some((d) => d.processing !== null)
-    if (!anyProcessing) return
-    const id = setInterval(() => documents.reload(), 1000)
+    if (!processingIds) return
+    const id = setInterval(documents.reload, 1000)
     return () => clearInterval(id)
-  }, [documents])
+  }, [documents.reload, processingIds])
 
   async function handleImport(): Promise<void> {
     setImportError(null)

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { getDocument } from 'pdfjs-dist'
 
 // @ts-expect-error Node runs this TypeScript test directly and requires its extension.
 import { ApiError, OFFLINE_MESSAGE, createApi, mockModeFrom, toApiError } from '../src/renderer/src/data/api.ts'
@@ -14,6 +15,46 @@ function recordingSleep() {
 function normalApi() {
   return createApi({ mode: 'normal', seed: sampleSeed, sleep: async () => {} })
 }
+
+const SIMPLE_PDF = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 37 >>
+stream
+BT /F1 18 Tf 30 100 Td (Hello PDF) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+0000000271 00000 n
+0000000358 00000 n
+trailer
+<< /Root 1 0 R /Size 6 >>
+startxref
+428
+%%EOF`
+
+test('PDF.js reads a simple one-page PDF', async () => {
+  const pdf = await getDocument({ data: new TextEncoder().encode(SIMPLE_PDF) }).promise
+  assert.equal(pdf.numPages, 1)
+  const content = await (await pdf.getPage(1)).getTextContent()
+  assert.match(content.items.map((item) => ('str' in item ? item.str : '')).join(' '), /Hello PDF/)
+})
 
 test('mockModeFrom maps Vite modes', () => {
   assert.equal(mockModeFrom('development'), 'normal')
@@ -59,6 +100,10 @@ test('two api instances do not share deletions and never mutate the seed', async
   await first.deleteDeck('deck-bio')
   assert.equal((await normalApi().listDecks()).length, 3)
   assert.equal(sampleSeed.decks.length, 3)
+})
+
+test('the demo library has no document left permanently processing', () => {
+  assert.equal(sampleSeed.documents.some((document) => document.processing !== null), false)
 })
 
 test('returned data cannot be used to mutate the store', async () => {

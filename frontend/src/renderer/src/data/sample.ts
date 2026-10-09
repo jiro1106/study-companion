@@ -131,15 +131,6 @@ export const sampleSeed: Seed = {
           highlight: 'a ten-year Commonwealth period'
         }
       }
-    },
-    {
-      id: 'doc-phys',
-      fileName: 'PHYS 71 Problem Set 4.pdf',
-      title: 'Problem Set 4',
-      pageCount: 14,
-      cardCount: 0,
-      processing: { currentPage: 9 },
-      summary: null
     }
   ],
   quiz: [

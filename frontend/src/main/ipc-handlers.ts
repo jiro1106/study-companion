@@ -4,6 +4,7 @@ import { basename } from 'node:path'
 import { v4 as uuidv4 } from 'uuid'
 import type { ImportResult, AIResponse, FocusModeResult, FocusModeStatus } from '../shared/types'
 import { getFocusModeStatus, setFocusMode } from './focus-blocker'
+import { hasPdfMagicBytes } from './pdf-import'
 
 /** Maximum document size that will be passed to the AI (characters). */
 const MAX_DOC_CHARS = 120_000
@@ -36,11 +37,7 @@ ipcMain.handle('pdf:import', async (): Promise<ImportResult> => {
   }
 
   const buffer = await readFile(filePath)
-  const uint8 = new Uint8Array(buffer)
-
-  // Basic PDF magic-bytes check
-  const magic = String.fromCharCode(...uint8.slice(0, 5))
-  if (magic !== '%PDF-') {
+  if (!hasPdfMagicBytes(new Uint8Array(buffer))) {
     return { ok: false, reason: 'invalid-type', message: `"${name}" is not a valid PDF file.` }
   }
 

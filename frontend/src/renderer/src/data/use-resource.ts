@@ -18,8 +18,9 @@ export function useResource<T>(load: () => Promise<T>, deps: DependencyList): Re
   useEffect(() => {
     let current = true
     // reload() keeps ready data on screen while refetching; changed deps start from loading.
-    setState((s) => (soft.current && s.status === 'ready' ? s : { status: 'loading' }))
+    const preserveReady = soft.current
     soft.current = false
+    setState((s) => (preserveReady && s.status === 'ready' ? s : { status: 'loading' }))
     load().then(
       (data) => current && setState({ status: 'ready', data }),
       (error: unknown) => current && setState({ status: 'error', error: toApiError(error) })
