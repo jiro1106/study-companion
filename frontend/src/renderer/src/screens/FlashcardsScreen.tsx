@@ -20,6 +20,8 @@ const RATING_STYLE: Record<Rating, { variant: 'secondary' | 'primary'; className
   easy: { variant: 'primary', className: '', label: 'Easy' }
 }
 
+const FACE = 'col-start-1 row-start-1 grid content-center justify-items-center gap-3.5 rounded-3xl border-2 border-b-[6px] border-border bg-surface px-7 py-10 text-center backface-hidden'
+
 function isTyping(target: EventTarget | null): boolean {
   return target instanceof HTMLElement && target.matches('input, textarea')
 }
@@ -61,10 +63,19 @@ function Session({ cards }: { cards: Flashcard[] }): React.JSX.Element {
           <EmptyState title="Session complete" body={`You reviewed ${session.total} ${session.total === 1 ? 'card' : 'cards'}. Come back tomorrow for the next batch.`} action={<Button onClick={() => navigate({ screen: 'today' })}>Back to Today</Button>} />
         ) : (
           <div className="grid w-full max-w-[640px] gap-5">
-            <button type="button" onClick={() => setSession(flip)} aria-label={session.flipped ? 'Show term' : 'Show definition'} className="grid min-h-[280px] w-full cursor-pointer content-center justify-items-center gap-3.5 rounded-3xl border-2 border-b-[6px] border-border bg-surface px-7 py-10 text-center">
-              <span className="font-display text-[34px] leading-tight font-black">{card.term}</span>
-              {session.flipped && <span className="max-w-[40ch] text-lg text-fg-muted">{card.definition}</span>}
-              <span className="text-[12px] font-extrabold tracking-[0.053em] text-link uppercase">{session.flipped ? 'Rate how well you knew it' : 'Click or press Space to flip'}</span>
+            {/* key remounts per card so the reset to front doesn't animate back (would reveal next definition) */}
+            <button key={card.id} type="button" onClick={() => setSession(flip)} aria-label={session.flipped ? 'Show term' : 'Show definition'} className="perspective-distant grid min-h-[280px] w-full cursor-pointer">
+              <span className={`grid transform-3d transition-transform duration-500 ease-out ${session.flipped ? 'rotate-y-180' : ''}`}>
+                <span aria-hidden={session.flipped} className={`${FACE} font-display text-[34px] leading-tight font-black`}>
+                  {card.term}
+                  <span className="font-body text-[12px] font-extrabold tracking-[0.053em] text-link uppercase">Click or press Space to flip</span>
+                </span>
+                <span aria-hidden={!session.flipped} className={`${FACE} rotate-y-180`}>
+                  <span className="font-display text-[34px] leading-tight font-black">{card.term}</span>
+                  <span className="max-w-[40ch] text-lg text-fg-muted">{card.definition}</span>
+                  <span className="text-[12px] font-extrabold tracking-[0.053em] text-link uppercase">Rate how well you knew it</span>
+                </span>
+              </span>
             </button>
             {session.flipped && (
               <div className="grid grid-cols-2 gap-2.5 mid:grid-cols-4">
