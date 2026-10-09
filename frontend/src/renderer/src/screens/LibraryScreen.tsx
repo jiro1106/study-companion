@@ -6,6 +6,7 @@ import { useResource } from '../data/use-resource'
 import { PAGE } from '../ui/page'
 import { useNavigation } from '../shell/navigation'
 import { Button } from '../ui/Button'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { EmptyState } from '../ui/EmptyState'
 import { ICON } from '../ui/icon'
 import { Pill } from '../ui/Pill'
@@ -37,15 +38,8 @@ function DocumentCard({ doc, onOpen, onDelete }: { doc: StudyDocument; onOpen: (
             Reading page {processing.currentPage} of {doc.pageCount}…
           </div>
           <ProgressBar size="sm" value={processing.currentPage / doc.pageCount} label={`Reading ${doc.fileName}`} />
+          <Button variant="ghost" disabled={deleting} onClick={async () => { setDeleting(true); await onDelete() }}>Cancel</Button>
         </>
-      ) : confirming ? (
-        <div className="grid gap-2">
-          <p className="text-[13px] text-fg-muted">This also deletes its decks, quiz, and chat.</p>
-          <div className="flex gap-2">
-            <Button variant="danger" disabled={deleting} onClick={async () => { setDeleting(true); await onDelete() }}>Delete</Button>
-            <Button variant="ghost" onClick={() => setConfirming(false)}>Cancel</Button>
-          </div>
-        </div>
       ) : (
         <div className="flex items-center gap-2">
           <Pill tone="brand">{doc.cardCount} cards</Pill>
@@ -55,6 +49,14 @@ function DocumentCard({ doc, onOpen, onDelete }: { doc: StudyDocument; onOpen: (
           </button>
         </div>
       )}
+      <ConfirmDialog
+        open={confirming}
+        title={`Delete ${doc.fileName}?`}
+        body="This also deletes its decks, quiz, and chat."
+        busy={deleting}
+        onCancel={() => setConfirming(false)}
+        onConfirm={async () => { setDeleting(true); await onDelete() }}
+      />
     </article>
   )
 }
