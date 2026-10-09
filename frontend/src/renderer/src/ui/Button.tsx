@@ -6,7 +6,7 @@ const variants: Record<Variant, string> = {
   primary: 'bg-primary text-on-primary border-b-4 border-primary-lip',
   secondary: 'bg-surface text-link border-2 border-border border-b-4',
   dark: 'bg-night text-bg border-b-4 border-night/70',
-  danger: 'bg-danger text-white border-b-4 border-danger-lip',
+  danger: 'bg-danger text-on-primary border-b-4 border-danger-lip',
   ghost: 'bg-transparent text-fg-muted'
 }
 

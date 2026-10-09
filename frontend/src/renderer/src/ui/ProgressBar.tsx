@@ -23,7 +23,7 @@ export function ProgressBar({
         className="relative h-full rounded-full bg-primary transition-[width] duration-300"
         style={{ width: `${percent}%` }}
       >
-        <span className="absolute inset-x-2 top-[3px] h-1 rounded-full bg-white/35" />
+        <span className="absolute inset-x-2 top-[3px] h-1 rounded-full bg-on-primary/35" />
       </div>
     </div>
   )
