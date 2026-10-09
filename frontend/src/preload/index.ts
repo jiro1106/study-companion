@@ -12,6 +12,11 @@ const isFloating = typeof location !== 'undefined' &&
 const bardhie: Window['bardhie'] = Object.freeze({
   platform: process.platform,
 
+  mascot: Object.freeze({
+    get: (): Promise<boolean> => ipcRenderer.invoke('mascot:get'),
+    set: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke('mascot:set', enabled),
+  }),
+
   // Only expose the floating API in the floating window
   ...(isFloating
     ? {

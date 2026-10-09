@@ -9,8 +9,16 @@ export interface FloatingAPI {
   hide(): void
 }
 
+export interface MascotAPI {
+  /** Whether the floating mascot is enabled. */
+  get(): Promise<boolean>
+  /** Enable or disable the floating mascot; resolves to the saved value. */
+  set(enabled: boolean): Promise<boolean>
+}
+
 export interface BardhieAPI {
   readonly platform: string
+  readonly mascot: MascotAPI
   /** Floating assistant desktop controls (only available in the floating window). */
   readonly floating?: FloatingAPI
 }

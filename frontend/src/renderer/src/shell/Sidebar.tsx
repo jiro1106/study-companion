@@ -5,6 +5,7 @@ import { ICON } from '../ui/icon'
 import { Kbd } from '../ui/Kbd'
 import { Mascot } from '../ui/Mascot'
 import { useNavigation, type ScreenName } from './navigation'
+import { MascotToggle } from './MascotToggle'
 import { ThemeToggle } from './ThemeToggle'
 
 const NAV: Array<{ screen: ScreenName; label: string; Icon: typeof Home }> = [
@@ -52,6 +53,7 @@ export function Sidebar(): React.JSX.Element {
       </nav>
 
       <div className="mt-auto grid gap-3">
+        <MascotToggle />
         <button
           type="button"
           onClick={openQuickAsk}

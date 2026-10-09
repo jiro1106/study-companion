@@ -1,6 +1,6 @@
 import { readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { app, BrowserWindow, globalShortcut, ipcMain, screen } from 'electron'
+import { app, BrowserWindow, dialog, type MessageBoxOptions, globalShortcut, ipcMain, powerMonitor, screen } from 'electron'
 
 import { windowOptions } from './window-options'
 import { fitToDisplays, parseWindowState, serializeWindowState, type WindowState } from './window-state'
@@ -10,6 +10,48 @@ let floatingWindow: BrowserWindow | null = null
 
 const SLEEPING_SIZE = { width: 110, height: 110 }
 const AWAKE_SIZE = { width: 400, height: 520 }
+
+// ── Mascot preference (persisted) ───────────────────────
+
+let mascotEnabled = true
+
+function settingsPath(): string {
+  return join(app.getPath('userData'), 'settings.json')
+}
+
+function loadSettings(): void {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(settingsPath(), 'utf8'))
+    if (parsed && typeof parsed === 'object' && 'mascotEnabled' in parsed) {
+      mascotEnabled = parsed.mascotEnabled !== false
+    }
+  } catch {
+    // First launch or unreadable file: mascot on by default.
+  }
+}
+
+function saveSettings(): void {
+  try {
+    writeFileSync(settingsPath(), JSON.stringify({ mascotEnabled }))
+  } catch (error) {
+    console.error('Could not save Bardy settings', error)
+  }
+}
+
+/** The mascot shows whenever it is enabled, even with the main window open. */
+function syncMascot(): void {
+  if (mascotEnabled) {
+    if (floatingWindow && !floatingWindow.isDestroyed()) {
+      floatingWindow.showInactive()
+    } else {
+      void createFloatingWindow()
+        .then((win) => win.showInactive())
+        .catch((err) => console.error('Failed to create floating window:', err))
+    }
+  } else if (floatingWindow && !floatingWindow.isDestroyed()) {
+    floatingWindow.hide()
+  }
+}
 
 function windowStatePath(): string {
   return join(app.getPath('userData'), 'window-state.json')
@@ -48,6 +90,7 @@ function saveWindowState(window: BrowserWindow): void {
 /** Create the main window, or focus it if open. Opened from the floating popup. */
 export async function createWindow(): Promise<BrowserWindow> {
   if (mainWindow && !mainWindow.isDestroyed()) {
+    if (mainWindow.isMinimized()) mainWindow.restore()
     mainWindow.show()
     mainWindow.focus()
     return mainWindow
@@ -66,6 +109,12 @@ export async function createWindow(): Promise<BrowserWindow> {
     }
   })
 
+  mainWindow = window
+  window.on('closed', () => {
+    mainWindow = null
+    if (process.platform !== 'darwin') app.quit()
+  })
+
   if (state.isMaximized) window.maximize()
   if (state.isFullScreen) window.setFullScreen(true)
   window.on('close', () => saveWindowState(window))
@@ -76,11 +125,6 @@ export async function createWindow(): Promise<BrowserWindow> {
     await window.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
-  window.on('closed', () => {
-    mainWindow = null
-  })
-
-  mainWindow = window
   return window
 }
 
@@ -102,6 +146,7 @@ async function createFloatingWindow(): Promise<BrowserWindow> {
     frame: false,
     transparent: true,
     resizable: false,
+    show: false,
     alwaysOnTop: true,
     skipTaskbar: true,
     hasShadow: false,
@@ -176,10 +221,20 @@ function setupIPC(): void {
     })
   })
 
+  ipcMain.handle('mascot:get', () => mascotEnabled)
+
+  ipcMain.handle('mascot:set', (_event, enabled: unknown) => {
+    mascotEnabled = enabled === true
+    saveSettings()
+    syncMascot()
+    return mascotEnabled
+  })
+
+  // The pet's own X button: same as switching the sidebar toggle off.
   ipcMain.on('floating:hide', () => {
-    if (floatingWindow && !floatingWindow.isDestroyed()) {
-      floatingWindow.hide()
-    }
+    mascotEnabled = false
+    saveSettings()
+    syncMascot()
   })
 }
 
@@ -189,6 +244,7 @@ function registerShortcut(): void {
   const accelerator = 'CommandOrControl+Shift+B'
 
   const registered = globalShortcut.register(accelerator, () => {
+    if (!mascotEnabled) return
     if (!floatingWindow || floatingWindow.isDestroyed()) {
       void createFloatingWindow().catch((err) => {
         console.error('Failed to recreate floating window:', err)
@@ -219,16 +275,17 @@ function handleStartupError(error: unknown): void {
 
 app.whenReady()
   .then(async () => {
+    loadSettings()
     setupIPC()
 
-    // Start with the floating mascot (not the main window)
-    await createFloatingWindow()
+    await createWindow()
+    syncMascot()
 
     registerShortcut()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
-        void createFloatingWindow().catch(handleStartupError)
+        void createWindow().catch(handleStartupError)
       }
     })
   })
@@ -239,6 +296,43 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+// ── Quit confirmation ───────────────────────────────────
+
+let quitConfirmed = false
+let confirmingQuit = false
+
+function quitNow(): void {
+  quitConfirmed = true
+  app.quit()
+}
+
+app.on('before-quit', (event) => {
+  if (quitConfirmed) return
+  event.preventDefault()
+  if (confirmingQuit) return
+  confirmingQuit = true
+
+  const parent = mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() ? mainWindow : undefined
+  const options: MessageBoxOptions = {
+    type: 'question',
+    buttons: ['Quit', 'Cancel'],
+    defaultId: 1,
+    cancelId: 1,
+    message: 'Quit Bardy?',
+    detail: 'The mascot will close too.'
+  }
+  const result = parent ? dialog.showMessageBox(parent, options) : dialog.showMessageBox(options)
+  void result.then(({ response }) => {
+    confirmingQuit = false
+    if (response === 0) quitNow()
+  })
+})
+
+// Ctrl+C / kill in the terminal and OS shutdown already mean "quit": no prompt.
+process.on('SIGINT', quitNow)
+process.on('SIGTERM', quitNow)
+app.whenReady().then(() => powerMonitor.on('shutdown', () => (quitConfirmed = true)))
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll()
