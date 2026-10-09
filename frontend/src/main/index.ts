@@ -4,6 +4,7 @@ import { app, BrowserWindow, dialog, type MessageBoxOptions, globalShortcut, ipc
 
 import { windowOptions } from './window-options'
 import { fitToDisplays, parseWindowState, serializeWindowState, type WindowState } from './window-state'
+import './ipc-handlers'
 
 let mainWindow: BrowserWindow | null = null
 let floatingWindow: BrowserWindow | null = null

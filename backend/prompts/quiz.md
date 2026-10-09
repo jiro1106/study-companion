@@ -6,6 +6,7 @@ Generate quiz questions following these rules:
 3. Questions should test understanding, not just memorization
 4. Include a brief explanation for why the correct answer is right
 5. Vary difficulty: some questions should be straightforward, others more challenging
+6. If the source material contains "[Page N]" markers, set "page" to the page each question is based on; otherwise use 1
 
 Respond in JSON format:
 {
@@ -14,7 +15,8 @@ Respond in JSON format:
       "question": "...",
       "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
       "correct": "A",
-      "explanation": "..."
+      "explanation": "...",
+      "page": 1
     }
   ]
 }

@@ -21,7 +21,7 @@ export interface AiHealth {
   availableModels?: string[]
 }
 
-const BACKEND_PORTS = [8001, 8000]
+const BACKEND_PORTS = [8000, 8001]
 let cachedBaseUrl: string | null = null
 
 /**
@@ -54,8 +54,8 @@ export async function getBackendBaseUrl(): Promise<string> {
     }
   }
 
-  // Default to 8001
-  return 'http://127.0.0.1:8001'
+  // Default to the backend's documented default port
+  return 'http://127.0.0.1:8000'
 }
 
 /**

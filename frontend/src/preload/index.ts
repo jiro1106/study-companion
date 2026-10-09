@@ -17,6 +17,8 @@ const bardhie: Window['bardhie'] = Object.freeze({
     set: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke('mascot:set', enabled),
   }),
 
+  importPDF: () => ipcRenderer.invoke('pdf:import'),
+
   // Only expose the floating API in the floating window
   ...(isFloating
     ? {

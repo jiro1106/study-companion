@@ -4,5 +4,6 @@
   ],
   "python.autoComplete.extraPaths": [
     "./backend"
-  ]
+  ],
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/Scripts/python.exe"
 }

@@ -6,6 +6,7 @@ import { useResource } from '../data/use-resource'
 import { useNavigation } from '../shell/navigation'
 import { check, isFinished, next, select, startQuiz, type QuizSession } from '../study/quiz-session'
 import { Button } from '../ui/Button'
+import { DocumentPicker } from '../ui/DocumentPicker'
 import { EmptyState } from '../ui/EmptyState'
 import { ICON } from '../ui/icon'
 import { ProgressBar } from '../ui/ProgressBar'
@@ -98,6 +99,22 @@ function Quiz({ questions }: { questions: QuizQuestion[] }): React.JSX.Element {
 export function QuizScreen(): React.JSX.Element {
   const { route, navigate } = useNavigation()
   const documentId = route.screen === 'quiz' ? route.documentId : undefined
+
+  if (!documentId) {
+    return (
+      <DocumentPicker
+        title="Quiz yourself"
+        body="Pick a document to generate quiz questions from."
+        onSelect={(doc) => navigate({ screen: 'quiz', documentId: doc.id })}
+      />
+    )
+  }
+
+  return <QuizRunner documentId={documentId} />
+}
+
+function QuizRunner({ documentId }: { documentId: string }): React.JSX.Element {
+  const { navigate } = useNavigation()
   const questions = useResource<QuizQuestion[]>(() => api.getQuiz(documentId), [documentId])
 
   return (
@@ -105,7 +122,7 @@ export function QuizScreen(): React.JSX.Element {
       resource={questions}
       loading={<div className="mx-auto grid w-full max-w-[640px] gap-4 px-8 pt-20"><Skeleton className="h-10" />{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-14" />)}</div>}
       isEmpty={(list) => list.length === 0}
-      empty={<div className="px-8"><EmptyState title="No quiz yet" body="Quizzes are made from your PDFs. Add one to your library to get started." action={<Button onClick={() => navigate({ screen: 'library' })}>Go to library</Button>} /></div>}
+      empty={<div className="px-8"><EmptyState title="No quiz for this document" body="The study engine hasn't made questions for this PDF yet." action={<Button onClick={() => navigate({ screen: 'quiz' })}>Choose another</Button>} /></div>}
     >
       {(list) => <Quiz questions={list} />}
     </ResourceView>

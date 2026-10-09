@@ -1,11 +1,12 @@
 import { X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { api, type Flashcard } from '../data'
+import { api, type Deck, type Flashcard, type StudyDocument } from '../data'
 import { useResource } from '../data/use-resource'
 import { useNavigation } from '../shell/navigation'
 import { RATINGS, RATING_HINTS, currentCardId, flip, isComplete, progress, rate, startSession, type FlashcardSession, type Rating } from '../study/flashcard-session'
 import { Button } from '../ui/Button'
+import { DocumentPicker } from '../ui/DocumentPicker'
 import { EmptyState } from '../ui/EmptyState'
 import { ICON } from '../ui/icon'
 import { Kbd } from '../ui/Kbd'
@@ -63,7 +64,7 @@ function Session({ cards }: { cards: Flashcard[] }): React.JSX.Element {
           <EmptyState title="Session complete" body={`You reviewed ${session.total} ${session.total === 1 ? 'card' : 'cards'}. Come back tomorrow for the next batch.`} action={<Button onClick={() => navigate({ screen: 'today' })}>Back to Today</Button>} />
         ) : (
           <div className="grid w-full max-w-[640px] gap-5">
-            {/* key remounts per card so the reset to front doesn't animate back (would reveal next definition) */}
+            {/* key remounts per card so the reset to front doesn't animate back */}
             <button key={card.id} type="button" onClick={() => setSession(flip)} aria-label={session.flipped ? 'Show term' : 'Show definition'} className="perspective-distant grid min-h-[280px] w-full cursor-pointer">
               <span className={`grid transform-3d transition-transform duration-500 ease-out ${session.flipped ? 'rotate-y-180' : ''}`}>
                 <span aria-hidden={session.flipped} className={`${FACE} font-display text-[34px] leading-tight font-black`}>
@@ -102,8 +103,37 @@ function Session({ cards }: { cards: Flashcard[] }): React.JSX.Element {
 }
 
 export function FlashcardsScreen(): React.JSX.Element {
-  const { route, navigate } = useNavigation()
+  const { route } = useNavigation()
   const deckId = route.screen === 'cards' ? route.deckId : undefined
+
+  if (!deckId) {
+    return <DocToDeckPicker />
+  }
+
+  return <CardRunner deckId={deckId} />
+}
+
+function DocToDeckPicker(): React.JSX.Element {
+  const { navigate } = useNavigation()
+  const decks = useResource<Deck[]>(() => api.listDecks(), [])
+
+  function handleSelect(doc: StudyDocument): void {
+    if (decks.status !== 'ready') return
+    const deck = decks.data.find((d) => d.sourceDocumentId === doc.id)
+    navigate(deck ? { screen: 'cards', deckId: deck.id } : { screen: 'library' })
+  }
+
+  return (
+    <DocumentPicker
+      title="Study flashcards"
+      body="Pick a document to study its flashcards."
+      onSelect={handleSelect}
+    />
+  )
+}
+
+function CardRunner({ deckId }: { deckId: string }): React.JSX.Element {
+  const { navigate } = useNavigation()
   const cards = useResource<Flashcard[]>(() => api.getDueCards(deckId), [deckId])
 
   return (
@@ -111,7 +141,7 @@ export function FlashcardsScreen(): React.JSX.Element {
       resource={cards}
       loading={<div className="mx-auto grid w-full max-w-[640px] gap-5 px-8 pt-20"><Skeleton className="h-4" /><Skeleton className="h-72 rounded-3xl" /></div>}
       isEmpty={(list) => list.length === 0}
-      empty={<div className="px-8"><EmptyState title="No cards due" body="You’re all caught up. Add a PDF to make more cards." action={<Button onClick={() => navigate({ screen: 'today' })}>Back to Today</Button>} /></div>}
+      empty={<div className="px-8"><EmptyState title="No cards due" body="All caught up. Add a PDF to make more cards." action={<Button onClick={() => navigate({ screen: 'today' })}>Back to Today</Button>} /></div>}
     >
       {(list) => <Session cards={list} />}
     </ResourceView>

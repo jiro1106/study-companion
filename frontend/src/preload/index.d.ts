@@ -16,11 +16,17 @@ export interface MascotAPI {
   set(enabled: boolean): Promise<boolean>
 }
 
+export type ImportPDFResult =
+  | { ok: false; reason: 'cancelled' | 'too-large' | 'invalid-type'; message?: string }
+  | { ok: true; document: { id: string; name: string; _bytes: string; pageCount: number } }
+
 export interface BardhieAPI {
   readonly platform: string
   readonly mascot: MascotAPI
   /** Floating assistant desktop controls (only available in the floating window). */
   readonly floating?: FloatingAPI
+  /** Open the native file picker and return the chosen PDF as base64 bytes. */
+  importPDF(): Promise<ImportPDFResult>
 }
 
 declare global {

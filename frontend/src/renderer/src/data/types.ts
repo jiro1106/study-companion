@@ -46,6 +46,8 @@ export interface StudyDocument {
   /** Set while the PDF is still being read. */
   processing: { currentPage: number } | null
   summary: DocumentSummary | null
+  /** Full extracted text from the PDF (available after import). */
+  text?: string
 }
 
 export interface QuizQuestion {
@@ -112,4 +114,12 @@ export interface StudyApi {
   getDueCards(deckId?: string): Promise<Flashcard[]>
   /** No documentId = every question. */
   getQuiz(documentId?: string): Promise<QuizQuestion[]>
+  /**
+   * Open the native file picker, import a PDF, extract text, and
+   * generate a summary + quiz via the backend.
+   * Returns the new document id, or null if the user cancelled.
+   * The document is added immediately in a processing state; the
+   * caller should poll listDocuments() until processing is null.
+   */
+  importDocument(): Promise<string | null>
 }

@@ -61,7 +61,6 @@ ipcMain.handle('pdf:import', async (): Promise<ImportResult> => {
       pageCount: 0,
       // We smuggle the base64 bytes inside the document temporarily.
       // The renderer strips this field before storing.
-      // @ts-expect-error: _bytes is a transport-only field
       _bytes: buffer.toString('base64')
     }
   }
