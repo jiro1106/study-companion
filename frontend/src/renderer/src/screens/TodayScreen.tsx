@@ -122,7 +122,7 @@ export function TodayScreen(): React.JSX.Element {
           <ScreenHeader
             eyebrow={now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
             title={stats.dueCount > 0 ? <>{greeting(now)}, {stats.userName}. <span className="text-primary-ink">{stats.dueCount} cards</span> are waiting.</> : <>{greeting(now)}, {stats.userName}.</>}
-            actions={<Button variant="secondary" onClick={() => navigate({ screen: 'library' })}>+ Add PDF</Button>}
+            actions={<Button onClick={() => navigate({ screen: 'library' })}>+ Add PDF</Button>}
           />
         )}
       </ResourceView>
