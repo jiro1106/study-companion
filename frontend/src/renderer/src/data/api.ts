@@ -1,5 +1,14 @@
-import { getBackendBaseUrl } from '../services/ai'
 import type { ChatMessage, Deck, Seed, StudyApi, StudyDocument } from './types'
+
+/**
+ * Dynamic import (like the pdfjs-dist import below) so this stays resolvable
+ * when api.ts is executed directly by Node's test runner, which — unlike
+ * Vite — does not resolve bundler-style `.js`-for-`.ts` specifiers.
+ */
+async function resolveBackendBaseUrl(): Promise<string> {
+  const { getBackendBaseUrl } = await import('../services/ai.js')
+  return getBackendBaseUrl()
+}
 
 export type MockMode = 'normal' | 'slow' | 'error'
 export type ApiErrorKind = 'offline' | 'not-found' | 'empty-question' | 'unknown'
@@ -107,7 +116,7 @@ export function createApi(options: {
 
       let aiResponseText = ''
       try {
-        const baseUrl = await getBackendBaseUrl()
+        const baseUrl = await resolveBackendBaseUrl()
         const res = await fetch(`${baseUrl}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -244,7 +253,7 @@ const SUMMARY_CONTEXT_CHARS = 20_000
 const GEN_CONTEXT_CHARS = 16_000
 
 async function postJson(path: string, body: unknown): Promise<any> {
-  const baseUrl = await getBackendBaseUrl()
+  const baseUrl = await resolveBackendBaseUrl()
   const res = await fetch(`${baseUrl}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
