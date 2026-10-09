@@ -20,6 +20,7 @@ interface ChatPanelProps {
   messages: ChatMessageType[]
   isLoading: boolean
   onSend: (text: string) => void
+  onEdit: (id: string, newText: string) => void
   onVoiceStart?: () => void
   onVoiceEnd?: () => void
   onTyping?: (isTyping: boolean) => void
@@ -29,6 +30,7 @@ export default function ChatPanel({
   messages,
   isLoading,
   onSend,
+  onEdit,
   onVoiceStart,
   onVoiceEnd,
   onTyping,
@@ -55,7 +57,7 @@ export default function ChatPanel({
             <PixelMascot state="awake" size={56} />
             <p className="chat-welcome-title">Hey there! 👋</p>
             <p className="chat-welcome-subtitle">
-              I&rsquo;m BARDHIE, your AI study companion.<br />
+              I&rsquo;m Bardy, your AI study companion.<br />
               Ask me anything, or try one of these quick prompts:
             </p>
             <div className="quick-prompts-grid">
@@ -89,6 +91,10 @@ export default function ChatPanel({
                   key={msg.id}
                   message={msg}
                   isStreaming={isStreaming}
+                  disabled={isLoading}
+                  showChips={isLastAssistant && !isLoading}
+                  onEdit={onEdit}
+                  onChipClick={onSend}
                 />
               )
             })}

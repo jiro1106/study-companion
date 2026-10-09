@@ -6,26 +6,25 @@
  * dynamic mascot mood sync, and study companion tools.
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react'
-import type { FloatingMode, MascotState, ChatMessage } from '../../types/assistant'
+import { useState, useCallback, useEffect } from 'react'
+import type { FloatingMode, MascotState } from '../../types/assistant'
 import PixelMascot from '../mascot/PixelMascot'
 import ChatPanel from './ChatPanel'
-import { sendAiChat, checkAiHealth, type AiMessage } from '../../services/ai'
+import { checkAiHealth } from '../../services/ai'
+import { useSharedChat } from './useSharedChat'
 import './FloatingAssistant.css'
-
-/** Generate a unique message ID. */
-function msgId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-}
 
 export default function FloatingAssistant(): React.JSX.Element {
   const [mode, setMode] = useState<FloatingMode>('sleeping')
   const [mascotState, setMascotState] = useState<MascotState>('sleeping')
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [isLoading, setIsLoading] = useState(false)
   const [aiModel, setAiModel] = useState<string>('Ollama')
   const [aiConnected, setAiConnected] = useState<boolean>(true)
-  const abortControllerRef = useRef<AbortController | null>(null)
+
+  // Conversation shared (and kept in sync) with the main window
+  const { messages, isLoading, send, edit, abort } = useSharedChat({
+    onActivity: (activity) =>
+      setMascotState(activity === 'idle' ? 'awake' : activity)
+  })
 
   // ── Health Check ───────────────────────────────────────
   const refreshHealth = useCallback(async () => {
@@ -57,119 +56,18 @@ export default function FloatingAssistant(): React.JSX.Element {
   }, [refreshHealth])
 
   const sleep = useCallback(() => {
-    // Abort any ongoing stream
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-      abortControllerRef.current = null
-    }
+    abort()
 
     setMode('sleeping')
     setMascotState('sleeping')
-    setIsLoading(false)
 
     // Tell main process to resize to mascot-only dimensions
     window.bardhie.floating?.setMode('sleeping')
-  }, [])
+  }, [abort])
 
   const maximize = useCallback(() => {
     window.bardhie.floating?.maximize()
   }, [])
-
-  const handleClearChat = useCallback(() => {
-    if (isLoading) return
-    setMessages([])
-  }, [isLoading])
-
-  // ── Chat with Real-Time Streaming ─────────────────────
-  const handleSend = useCallback(
-    async (text: string) => {
-      const trimmed = text.trim()
-      if (!trimmed || isLoading) return
-
-      // 1. Add user message
-      const userMsg: ChatMessage = {
-        id: msgId(),
-        role: 'user',
-        content: trimmed,
-        timestamp: Date.now(),
-      }
-
-      const assistantMsgId = msgId()
-      const assistantPlaceholder: ChatMessage = {
-        id: assistantMsgId,
-        role: 'assistant',
-        content: '',
-        timestamp: Date.now(),
-      }
-
-      setMessages((prev) => [...prev, userMsg, assistantPlaceholder])
-
-      // 2. Set thinking state
-      setMascotState('thinking')
-      setIsLoading(true)
-
-      const controller = new AbortController()
-      abortControllerRef.current = controller
-
-      // Prepare conversation history
-      const historyPayload: AiMessage[] = [
-        ...messages.map((m) => ({ role: m.role, content: m.content })),
-        { role: 'user', content: trimmed }
-      ]
-
-      let hasStartedSpeaking = false
-
-      try {
-        await sendAiChat({
-          messages: historyPayload,
-          systemPrompt:
-            'You are BARDHIE, a friendly, ultra-knowledgeable desktop study companion bird. ' +
-            'Help the user with active recall, concise explanations, study tips, flashcards, and motivation. ' +
-            'Keep replies engaging, clear, and appropriately concise for a desktop widget.',
-          stream: true,
-          signal: controller.signal,
-          onChunk: (_chunk, fullText) => {
-            if (!hasStartedSpeaking) {
-              hasStartedSpeaking = true
-              setMascotState('speaking')
-            }
-            setMessages((prev) =>
-              prev.map((m) =>
-                m.id === assistantMsgId ? { ...m, content: fullText } : m
-              )
-            )
-          }
-        })
-
-        // If not streaming or finished instantly
-        setMascotState('speaking')
-        setIsLoading(false)
-
-        setTimeout(() => {
-          setMascotState('awake')
-        }, 1200)
-      } catch (err: any) {
-        if (err.name === 'AbortError') return
-
-        setIsLoading(false)
-        setMascotState('awake')
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMsgId
-              ? {
-                  ...m,
-                  content:
-                    'Sorry, I had trouble reaching the AI server. Please make sure Ollama and the backend are running on http://127.0.0.1:8001.'
-                }
-              : m
-          )
-        )
-      } finally {
-        abortControllerRef.current = null
-      }
-    },
-    [messages, isLoading]
-  )
 
   // ── Drag & Mascot Mouse Interactions ──────────────────
   const handleMascotMouseDown = useCallback(
@@ -254,7 +152,7 @@ export default function FloatingAssistant(): React.JSX.Element {
         <PixelMascot state={mascotState} size={36} className="header-mascot" />
         <div className="floating-header-info">
           <div className="flex items-center gap-2">
-            <span className="floating-header-name">BARDHIE</span>
+            <span className="floating-header-name">Bardy</span>
             <span className="floating-model-pill" title={`Active LLM: ${aiModel}`}>
               {aiModel}
             </span>
@@ -273,20 +171,6 @@ export default function FloatingAssistant(): React.JSX.Element {
           </span>
         </div>
         <div className="floating-controls">
-          {messages.length > 0 && (
-            <button
-              className="floating-btn"
-              onClick={handleClearChat}
-              title="Clear chat history"
-              aria-label="Clear chat history"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 6h18" />
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-              </svg>
-            </button>
-          )}
           <button
             className="floating-btn floating-btn-maximize"
             onClick={maximize}
@@ -327,7 +211,8 @@ export default function FloatingAssistant(): React.JSX.Element {
       <ChatPanel
         messages={messages}
         isLoading={isLoading}
-        onSend={handleSend}
+        onSend={send}
+        onEdit={edit}
         onVoiceStart={handleVoiceStart}
         onVoiceEnd={handleVoiceEnd}
         onTyping={handleTyping}
