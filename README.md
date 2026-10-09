@@ -1,58 +1,80 @@
 # BARDHIE Desktop
 
-BARDHIE Desktop Phase 0 is a secure, cross-platform Electron development shell for macOS and Windows. It establishes the main, preload, and React renderer processes and displays a minimal placeholder with the current operating-system platform.
+BARDHIE is a cross-platform Electron desktop application. Phase 0 provides a secure development shell that runs from one codebase on macOS and Windows.
 
-Phase 0 deliberately does not include AI or study features, file handling, persistence, tray behavior, global shortcuts, background operation, or automated GUI tests. Installers, packaging, signing, notarization, publishing, Ollama integration, and the design system are deferred.
-
-## Prerequisites
+## What you need
 
 - Git
-- Node.js 24
-- npm (included with Node.js)
+- Node.js 24 (npm is included)
 
-## Setup and commands
+Verify Node after installing it:
 
-Install dependencies:
+```sh
+node --version
+```
+
+It must begin with `v24`.
+
+## Get the project
+
+If you already have the repository, switch to the desktop branch:
+
+```sh
+git switch feature/desktop
+```
+
+For a new clone after the branch is pushed to GitHub:
+
+```sh
+git clone <repository-url>
+cd study-companion
+git switch feature/desktop
+```
+
+## Run BARDHIE on macOS
+
+Open Terminal in the project folder and run:
 
 ```sh
 npm install
-```
-
-Start the development app with hot reload:
-
-```sh
 npm run dev
 ```
 
-Run the security contract test:
+A native BARDHIE window should open and display `Platform: darwin`. Keep the Terminal process running while using the app; press `Control + C` there to stop it.
+
+## Run BARDHIE on Windows
+
+Open PowerShell in the project folder and run:
+
+```powershell
+npm install
+npm run dev
+```
+
+A native BARDHIE window should open and display `Platform: win32`. Keep PowerShell open while using the app; press `Ctrl + C` to stop it.
+
+## Verify your setup
+
+Run these before sharing changes:
 
 ```sh
 npm test
-```
-
-Check the main, preload, and renderer TypeScript projects:
-
-```sh
 npm run typecheck
-```
-
-Compile the production bundles without creating an installer:
-
-```sh
 npm run build
 ```
 
-## Security boundary
-
-The Electron main process owns the application lifecycle, native window, and all privileged capabilities. The sandboxed preload process exposes only the typed, read-only `window.bardhie.platform` value through the context bridge. The React renderer is browser-like: it must not import Node.js or Electron APIs, and any future privileged behavior must be implemented in the main process and exposed through a narrow preload API rather than raw IPC.
+`npm run build` produces production bundles in `out/`. It does not yet create a Windows `.exe`, macOS `.app`, or `.dmg` installer.
 
 ## Manual smoke test
 
-Run all six steps on the project owner's Mac and a teammate's Windows machine:
+Test once on a Mac and once on a Windows machine:
 
-1. Install Node.js 24 and run `npm install`.
-2. Run `npm run dev`.
-3. Confirm a normal native BARDHIE window opens.
-4. Confirm the displayed platform is correct: `darwin` on macOS or `win32` on Windows.
-5. Change renderer copy and confirm hot reload updates the window.
-6. Close the window and confirm the expected operating-system lifecycle behavior.
+1. Run `npm run dev`.
+2. Confirm a normal, resizable BARDHIE window opens.
+3. Confirm the displayed platform is `darwin` on macOS or `win32` on Windows.
+4. Change text in `src/renderer/src/App.tsx`, save it, and confirm the window hot-reloads.
+5. Restore the text before committing.
+
+## Phase 0 boundaries
+
+This phase does not yet include AI/study features, PDF imports, local persistence, tray behavior, global shortcuts, background operation, installers, signing, or deployment. The Electron main process owns native capabilities; the sandboxed React renderer only receives the typed `window.bardhie.platform` value through the preload bridge.
