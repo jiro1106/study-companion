@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BARDHIE Sprout Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&family=Nunito+Sans:opsz,wght@6..12,500;6..12,700;6..12,800&display=swap">
+<style>
+/* Layout: flat storybook paper, sticky brand switcher, token sections then live components. No shadows, no gradients: thick borders and a chunky bottom "lip". */
+:root {
+  /* brand (Sprout, default) */
+  --primary: #58cc02;
+  --primary-lip: #58a700;
+  --primary-soft: #a5ed6e;
+  --primary-wash: #d7ffb8;
+  --primary-ink: #3f9600;
+  --on-primary: #ffffff;
+
+  /* shared accents */
+  --link: #1cb0f6;
+  --link-lip: #1899d6;
+  --night: #000437;
+  --streak: #ff9600;
+
+  /* semantic (never changes with brand) */
+  --success: #58cc02;
+  --success-wash: #d7ffb8;
+  --danger: #ff4b4b;
+  --danger-lip: #ea2b2b;
+  --danger-wash: #ffdfe0;
+  --warning: #ffc800;
+  --warning-wash: #fff5d3;
+
+  /* neutrals */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f7f7f7;
+  --fg: #4b4b4b;
+  --fg-muted: #777777;
+  --fg-faint: #afafaf;
+  --border: #e5e5e5;
+  --border-strong: #afafaf;
+
+  /* type */
+  --font-display: "Nunito", "Feather Bold", ui-rounded, system-ui, sans-serif;
+  --font-body: "Nunito Sans", "DIN Next", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs-caption: 13px;
+  --fs-label: 15px;
+  --fs-body: 17px;
+  --fs-sub: 19px;
+  --fs-h-sm: 32px;
+  --fs-h: 48px;
+  --fs-display: 64px;
+
+  /* shape + space */
+  --radius: 12px;
+  --radius-lg: 16px;
+  --bw: 2px;
+  --lip: 4px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131f24; --surface: #131f24; --surface-2: #1b2b32; --fg: #f1f7fb; --fg-muted: #a3b4bd; --fg-faint: #52656d;
+    --border: #37464f; --border-strong: #52656d; --night: #dfe3ff;
+    --primary-wash: #233a17;
+    --primary-ink: #a5ed6e;
+    --success-wash: #23380f; --danger-wash: #3f1f23; --warning-wash: #3a3112;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131f24; --surface: #131f24; --surface-2: #1b2b32; --fg: #f1f7fb; --fg-muted: #a3b4bd; --fg-faint: #52656d;
+  --border: #37464f; --border-strong: #52656d; --night: #dfe3ff;
+  --primary-wash: #233a17;
+  --primary-ink: #a5ed6e;
+  --success-wash: #23380f; --danger-wash: #3f1f23; --warning-wash: #3a3112;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: var(--fs-body); font-weight: 500; line-height: 1.4;
+  padding-inline: 16px; padding-block: 0 0;
+}
+.wrap { max-width: 1200px; margin-inline: auto; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+
+/* top bar */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+  background: var(--bg); border-bottom: var(--bw) solid var(--border);
+  margin-inline: -16px; padding: 12px 16px;
+}
+.topbar .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.wordmark { font-family: var(--font-display); font-weight: 900; font-size: 28px; letter-spacing: -0.02em; color: var(--primary); }
+.switch { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.switch-label { font-size: var(--fs-caption); font-weight: 800; text-transform: uppercase; letter-spacing: 0.053em; color: var(--fg-muted); }
+.brand-opt {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: 700 var(--fs-label)/1.33 var(--font-body); text-transform: uppercase; letter-spacing: 0.053em;
+  color: var(--fg-muted); background: transparent; cursor: pointer;
+  border: var(--bw) solid var(--border); border-bottom-width: var(--lip); border-radius: var(--radius);
+  padding: 8px 14px;
+}
+.brand-opt .dot { width: 14px; height: 14px; border-radius: 50%; }
+.brand-opt[aria-pressed="true"] { color: var(--fg); border-color: var(--primary); background: var(--primary-wash); }
+
+/* hero */
+.hero { padding-block: 64px 48px; display: grid; gap: 16px; }
+.eyebrow { font-size: var(--fs-label); font-weight: 800; text-transform: uppercase; letter-spacing: 0.053em; color: var(--fg-muted); }
+.display { font-family: var(--font-display); font-weight: 900; font-size: clamp(40px, 8vw, var(--fs-display)); line-height: 1.1; letter-spacing: -0.02em; color: var(--primary-ink); }
+.lede { max-width: 560px; color: var(--fg-muted); font-size: var(--fs-sub); }
+.brand-note { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+/* sections */
+section.block { padding-block: 48px; border-top: var(--bw) solid var(--border); display: grid; gap: 24px; }
+.section-head { display: grid; gap: 8px; }
+.h { font-family: var(--font-display); font-weight: 900; font-size: clamp(32px, 5vw, var(--fs-h)); letter-spacing: -0.02em; line-height: 1.2; color: var(--primary-ink); }
+.h-sm { font-family: var(--font-body); font-weight: 800; font-size: var(--fs-sub); color: var(--fg); }
+.muted { color: var(--fg-muted); }
+.sub-grid { display: grid; gap: 32px; }
+
+/* swatches */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+.swatch { cursor: pointer; text-align: left; font: inherit; color: inherit; background: var(--surface); padding: 0; display: block; width: 100%; border: var(--bw) solid var(--border); border-radius: var(--radius-lg); overflow: hidden; min-width: 0; }
+.swatch .chip { height: 88px; border-bottom: var(--bw) solid var(--border); }
+.swatch .meta { padding: 12px; display: grid; gap: 2px; }
+.swatch .name { font-weight: 800; font-size: 15px; }
+.swatch .var, .swatch .hex { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--fg-muted); overflow-wrap: anywhere; }
+.swatch .role { font-size: var(--fs-caption); color: var(--fg-muted); line-height: 1.3; margin-top: 4px; }
+
+/* type specimens */
+.type-row { display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: baseline; padding-block: 16px; border-bottom: var(--bw) solid var(--border); }
+.type-row:last-child { border-bottom: 0; }
+.type-row .spec { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--fg-muted); line-height: 1.5; }
+.type-row .sample { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) { .type-row { grid-template-columns: 1fr; gap: 6px; } }
+
+/* spacing / radius */
+.space-list { display: grid; gap: 10px; }
+.space-item { display: grid; grid-template-columns: 56px 1fr; align-items: center; gap: 12px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--fg-muted); font-variant-numeric: tabular-nums; }
+.space-item .bar { height: 16px; border-radius: 4px; background: var(--primary-soft); max-width: 100%; }
+.shape-row { display: flex; flex-wrap: wrap; gap: 16px; }
+.shape { width: 120px; height: 88px; display: grid; place-items: center; text-align: center; font-size: var(--fs-caption); font-weight: 700; color: var(--fg-muted); background: var(--surface-2); border: var(--bw) solid var(--border-strong); }
+.shape.lip { border-color: var(--border); border-bottom-width: var(--lip); }
+
+/* components */
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+.panel { border: var(--bw) solid var(--border); border-radius: var(--radius-lg); padding: 24px; display: grid; gap: 16px; align-content: start; min-width: 0; }
+.panel > .label { font-size: var(--fs-caption); font-weight: 800; text-transform: uppercase; letter-spacing: 0.053em; color: var(--fg-muted); }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: 800 var(--fs-label)/1 var(--font-body); text-transform: uppercase; letter-spacing: 0.053em;
+  border-radius: var(--radius); padding: 13px 20px; cursor: pointer;
+  border: 0; border-bottom: var(--lip) solid transparent;
+  transition: filter .12s;
+}
+.btn:hover { filter: brightness(1.06); }
+.btn:active { transform: translateY(2px); border-bottom-width: 2px; }
+.btn-primary { background: var(--primary); color: var(--on-primary); border-bottom-color: var(--primary-lip); }
+.btn-secondary { background: var(--surface); color: var(--link); border: var(--bw) solid var(--border); border-bottom-width: var(--lip); }
+.btn-dark { background: var(--night); color: var(--bg); border-bottom-color: color-mix(in oklab, var(--night) 70%, #000); }
+.btn-danger { background: var(--danger); color: #fff; border-bottom-color: var(--danger-lip); }
+.btn-ghost { background: transparent; color: var(--primary-ink); border-bottom-width: 0; padding-block: 15px; }
+.btn[disabled] { background: var(--border); color: var(--fg-faint); border-bottom-color: var(--border); cursor: not-allowed; filter: none; transform: none; }
+.btn-block { width: 100%; }
+
+.field { display: grid; gap: 6px; }
+.field label { font-size: var(--fs-caption); font-weight: 800; text-transform: uppercase; letter-spacing: 0.053em; color: var(--fg-muted); }
+.input {
+  font: 500 var(--fs-body) var(--font-body); color: var(--fg);
+  background: var(--surface-2); border: var(--bw) solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px; width: 100%;
+}
+.input::placeholder { color: var(--fg-faint); }
+.input:focus { outline: none; border-color: var(--link); background: var(--surface); }
+.input.is-error { border-color: var(--danger); background: var(--danger-wash); }
+.hint { font-size: var(--fs-caption); color: var(--fg-muted); }
+.hint.err { color: var(--danger); font-weight: 700; }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 800 var(--fs-caption)/1 var(--font-body); text-transform: uppercase; letter-spacing: 0.053em;
+  padding: 7px 10px; border-radius: var(--radius); border: var(--bw) solid var(--border-strong); color: var(--fg-muted);
+}
+.pill.brand { background: var(--primary-wash); border-color: var(--primary); color: var(--primary-ink); }
+.pill.ok { background: var(--success-wash); border-color: var(--success); color: var(--fg); }
+.pill.warn { background: var(--warning-wash); border-color: var(--warning); color: var(--fg); }
+.pill.bad { background: var(--danger-wash); border-color: var(--danger); color: var(--fg); }
+
+.progress { height: 16px; border-radius: 99px; background: var(--border); overflow: hidden; }
+.progress > span { display: block; height: 100%; border-radius: 99px; background: var(--primary); position: relative; }
+.progress > span::after { content: ""; position: absolute; left: 8px; right: 8px; top: 4px; height: 4px; border-radius: 99px; background: rgba(255,255,255,.35); }
+.progress-meta { display: flex; justify-content: space-between; font-size: var(--fs-caption); font-weight: 700; color: var(--fg-muted); font-variant-numeric: tabular-nums; }
+
+.seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg button {
+  font: 800 var(--fs-label)/1.33 var(--font-body); text-transform: uppercase; letter-spacing: 0.053em;
+  background: transparent; color: var(--fg-muted); cursor: pointer;
+  border: var(--bw) solid var(--border-strong); border-radius: var(--radius); padding: 10px 16px;
+}
+.seg button[aria-selected="true"] { border-color: var(--link); color: var(--link); background: color-mix(in oklab, var(--link) 12%, var(--bg)); }
+
+.options { display: grid; gap: 10px; }
+.option {
+  display: flex; align-items: center; gap: 12px; text-align: left; width: 100%;
+  font: 600 var(--fs-body)/1.3 var(--font-body); color: var(--fg); background: var(--surface); cursor: pointer;
+  border: var(--bw) solid var(--border); border-bottom-width: var(--lip); border-radius: var(--radius); padding: 12px 14px;
+}
+.option .key { flex: none; width: 28px; height: 28px; display: grid; place-items: center; border: var(--bw) solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 800; color: var(--fg-muted); }
+.option[aria-pressed="true"] { border-color: var(--link); background: color-mix(in oklab, var(--link) 10%, var(--bg)); }
+.option[aria-pressed="true"] .key { border-color: var(--link); color: var(--link); }
+.option.correct { border-color: var(--success); background: var(--success-wash); }
+.option.correct .key { border-color: var(--success); color: var(--fg); }
+.option.wrong { border-color: var(--danger); background: var(--danger-wash); }
+.option.wrong .key { border-color: var(--danger); color: var(--fg); }
+
+.feedback { border-radius: var(--radius-lg); padding: 16px; display: grid; gap: 12px; }
+.feedback.ok { background: var(--success-wash); }
+.feedback.bad { background: var(--danger-wash); }
+.feedback h4 { margin: 0; font-family: var(--font-display); font-weight: 900; font-size: 22px; }
+.feedback.ok h4 { color: var(--success); }
+.feedback.bad h4 { color: var(--danger); }
+
+.flashcard {
+  border: var(--bw) solid var(--border); border-bottom-width: 6px; border-radius: 20px;
+  padding: 32px 24px; min-height: 200px; display: grid; place-items: center; text-align: center; gap: 12px; cursor: pointer;
+  background: var(--surface);
+}
+.flashcard .term { font-family: var(--font-display); font-weight: 900; font-size: 30px; line-height: 1.2; color: var(--fg); }
+.flashcard .def { font-size: var(--fs-body); color: var(--fg-muted); max-width: 34ch; }
+.flashcard .flip { font-size: var(--fs-caption); font-weight: 800; letter-spacing: .053em; text-transform: uppercase; color: var(--link); }
+
+.deck { border: var(--bw) solid var(--border); border-radius: var(--radius-lg); padding: 20px; display: grid; gap: 14px; }
+.deck-top { display: flex; gap: 14px; align-items: center; }
+.deck-icon { flex: none; width: 52px; height: 52px; border-radius: 14px; background: var(--primary-wash); border: var(--bw) solid var(--primary); display: grid; place-items: center; font-family: var(--font-display); font-weight: 900; font-size: 20px; color: var(--primary-ink); }
+.deck-title { font-weight: 800; font-size: var(--fs-sub); line-height: 1.2; }
+.deck-sub { font-size: var(--fs-caption); color: var(--fg-muted); font-weight: 700; }
+
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.stat { border: var(--bw) solid var(--border); border-radius: var(--radius); padding: 12px; display: grid; gap: 2px; min-width: 0; }
+.stat b { font-family: var(--font-display); font-weight: 900; font-size: 26px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; font-weight: 800; letter-spacing: .053em; text-transform: uppercase; color: var(--fg-muted); }
+.stat.streak b { color: var(--streak); }
+.stat.focus b { color: var(--primary-ink); }
+.stat.cards b { color: var(--link); }
+
+.nav { display: grid; gap: 6px; }
+.nav a {
+  display: flex; align-items: center; gap: 12px; text-decoration: none;
+  font: 800 var(--fs-label)/1.33 var(--font-body); text-transform: uppercase; letter-spacing: 0.053em; color: var(--fg-muted);
+  border: var(--bw) solid transparent; border-radius: var(--radius); padding: 10px 14px;
+}
+.nav a:hover { background: var(--surface-2); }
+.nav a[aria-current="page"] { color: var(--link); border-color: color-mix(in oklab, var(--link) 60%, var(--bg)); background: color-mix(in oklab, var(--link) 10%, var(--bg)); }
+.nav svg { width: 22px; height: 22px; flex: none; }
+
+.timer { display: grid; justify-items: center; gap: 12px; text-align: center; }
+.timer .clock { font-family: var(--font-display); font-weight: 900; font-size: 56px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--fg); line-height: 1; }
+.ring { width: 140px; height: 140px; }
+
+/* footer band */
+.band { margin-inline: -16px; margin-top: 48px; background: var(--primary); color: var(--on-primary); padding: 48px 16px; }
+.band .wrap { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.band h5 { margin: 0 0 8px; font-size: var(--fs-label); font-weight: 800; text-transform: uppercase; letter-spacing: .053em; }
+.band ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.band li { font-weight: 700; font-size: 15px; opacity: .85; }
+.band .mark { font-family: var(--font-display); font-weight: 900; font-size: 36px; letter-spacing: -0.02em; }
+
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.rule { border: var(--bw) solid var(--border); border-radius: var(--radius-lg); padding: 16px; display: grid; gap: 6px; }
+.rule b { font-weight: 800; }
+.rule p { font-size: 15px; color: var(--fg-muted); }
+.rule.do { border-color: var(--success); }
+.rule.dont { border-color: var(--danger); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } .btn:active { transform: none; } }
+</style>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="wordmark">bardhie</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Design system · v0.1 · Desktop</div>
+    <h1 class="display">Learn a little, every day.</h1>
+    <p class="lede">The visual language for BARDHIE, the study companion. Flat paper surfaces, chunky rounded type, sticker-like controls with a thick bottom lip, and one saturated brand color that means progress.</p>
+    <div class="brand-note"><span class="pill brand">Sprout green</span><span class="muted">Click any swatch to copy its hex code. Switch your system to dark mode to see the dark values.</span></div>
+  </section>
+
+  <!-- COLOR -->
+  <section class="block" id="color">
+    <div class="section-head">
+      <h2 class="h">Color</h2>
+      <p class="muted">Green is the brand. Blue is for links. Correct, incorrect and due-soon colors are fixed so feedback always means the same thing.</p>
+    </div>
+    <div class="sub-grid">
+      <div class="section-head"><h3 class="h-sm">Brand</h3></div>
+      <div class="swatches" data-swatches="--primary:Primary:CTA fills, progress, wordmark|--primary-lip:Primary lip:Button bottom edge|--primary-ink:Primary ink:Headings and text on paper|--primary-soft:Primary soft:Bars, tints, footer links|--primary-wash:Primary wash:Selected and highlight fills"></div>
+      <div class="section-head"><h3 class="h-sm">Accent and semantic</h3></div>
+      <div class="swatches" data-swatches="--link:Spark blue:Links, secondary buttons, focus|--link-lip:Blue lip:Bottom edge of blue elements|--night:Night ink:Deep emphasis, dark CTA|--success:Correct:Right answers, mastery|--danger:Incorrect:Wrong answers, errors|--warning:Heads-up:Due soon, low focus|--streak:Streak:Day-streak counter|--success-wash:Correct tint:Correct answer background|--danger-wash:Incorrect tint:Wrong answer background|--warning-wash:Heads-up tint:Due-soon background"></div>
+      <div class="section-head"><h3 class="h-sm">Neutrals</h3></div>
+      <div class="swatches" data-swatches="--bg:Paper:Page canvas|--surface-2:Paper 2:Inputs, hover fills|--border:Rule:Card and control borders|--border-strong:Rule strong:Outlined pills|--fg:Charcoal:Headings, body copy|--fg-muted:Pencil:Secondary text|--fg-faint:Faded:Disabled, placeholders"></div>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section class="block" id="type">
+    <div class="section-head">
+      <h2 class="h">Typography</h2>
+      <p class="muted">Nunito Black for display (stand-in for a rounded “feather” face). Nunito Sans 500 for reading, 700–800 for labels and emphasis.</p>
+    </div>
+    <div>
+      <div class="type-row"><div class="spec">display<br>64 / 1.2 / -0.02em<br>Nunito 900</div><div class="sample" style="font:900 clamp(40px,8vw,64px)/1.2 var(--font-display);letter-spacing:-0.02em;color:var(--primary-ink)">Ace the exam</div></div>
+      <div class="type-row"><div class="spec">heading<br>48 / 1.2 / -0.02em<br>Nunito 900</div><div class="sample" style="font:900 clamp(32px,5vw,48px)/1.2 var(--font-display);letter-spacing:-0.02em;color:var(--primary-ink)">Cell biology, unit 3</div></div>
+      <div class="type-row"><div class="spec">heading-sm<br>32 / 1.2<br>Nunito Sans 800</div><div class="sample" style="font:800 32px/1.2 var(--font-body)">12 cards due today</div></div>
+      <div class="type-row"><div class="spec">subheading<br>19 / 1.4<br>Nunito Sans 700</div><div class="sample" style="font:700 19px/1.4 var(--font-body)">Mitochondria produce ATP through cellular respiration.</div></div>
+      <div class="type-row"><div class="spec">body<br>17 / 1.4<br>Nunito Sans 500</div><div class="sample" style="font:500 17px/1.4 var(--font-body);color:var(--fg-muted);max-width:60ch">Review a little each day and spaced repetition does the rest. Cards you miss come back sooner; cards you know drift further out.</div></div>
+      <div class="type-row"><div class="spec">label<br>15 / 1.33 / 0.053em<br>Nunito Sans 800 caps</div><div class="sample" style="font:800 15px/1.33 var(--font-body);letter-spacing:.053em;text-transform:uppercase;color:var(--fg-muted)">Continue lesson</div></div>
+      <div class="type-row"><div class="spec">caption<br>13 / 1.23<br>Nunito Sans 700</div><div class="sample" style="font:700 13px/1.23 var(--font-body);color:var(--fg-muted)">Last reviewed 2 days ago · 84% recall</div></div>
+    </div>
+  </section>
+
+  <!-- SPACE / SHAPE -->
+  <section class="block" id="space">
+    <div class="section-head">
+      <h2 class="h">Space, shape, edges</h2>
+      <p class="muted">4px base unit. One 12px radius for controls, 16px for cards. No shadows or gradients: depth comes from a 2px border and a 4px bottom lip.</p>
+    </div>
+    <div class="comp-grid">
+      <div class="panel">
+        <div class="label">Spacing scale</div>
+        <div class="space-list" id="space-list"></div>
+      </div>
+      <div class="panel">
+        <div class="label">Radius and borders</div>
+        <div class="shape-row">
+          <div class="shape" style="border-radius:12px">radius 12<br>controls</div>
+          <div class="shape" style="border-radius:16px">radius 16<br>cards</div>
+          <div class="shape" style="border-radius:99px">radius full<br>progress</div>
+          <div class="shape lip" style="border-radius:12px">2px + 4px lip<br>pressable</div>
+        </div>
+        <p class="hint">Layout: max width 1200px · section gap 80–120px · card padding 16–24px · element gap 12px.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPONENTS -->
+  <section class="block" id="components">
+    <div class="section-head">
+      <h2 class="h">Components</h2>
+      <p class="muted">Live and clickable. Every piece is built only from the tokens above.</p>
+    </div>
+
+    <div class="comp-grid">
+      <div class="panel">
+        <div class="label">Buttons</div>
+        <div class="row">
+          <button class="btn btn-primary">Start session</button>
+          <button class="btn btn-secondary">Review later</button>
+        </div>
+        <div class="row">
+          <button class="btn btn-dark">Upload notes</button>
+          <button class="btn btn-ghost">Skip</button>
+        </div>
+        <div class="row">
+          <button class="btn btn-danger">Delete deck</button>
+          <button class="btn btn-primary" disabled>Check</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Inputs</div>
+        <div class="field">
+          <label for="deck-name">Deck name</label>
+          <input class="input" id="deck-name" value="Organic Chemistry — Reactions">
+        </div>
+        <div class="field">
+          <label for="ask">Ask your notes</label>
+          <input class="input" id="ask" placeholder="What does Le Chatelier’s principle predict?">
+        </div>
+        <div class="field">
+          <label for="goal">Daily goal (minutes)</label>
+          <input class="input is-error" id="goal" value="0" aria-describedby="goal-err" aria-invalid="true">
+          <span class="hint err" id="goal-err">Set a goal of at least 5 minutes.</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Badges and tabs</div>
+        <div class="row">
+          <span class="pill brand">New</span>
+          <span class="pill ok">Mastered</span>
+          <span class="pill warn">Due today</span>
+          <span class="pill bad">Struggling</span>
+          <span class="pill">Draft</span>
+        </div>
+        <div class="seg" role="tablist" aria-label="Study mode">
+          <button role="tab" id="tab-cards" aria-selected="true">Flashcards</button>
+          <button role="tab" id="tab-quiz" aria-selected="false">Quiz</button>
+          <button role="tab" id="tab-notes" aria-selected="false">Notes</button>
+        </div>
+        <div class="field">
+          <div class="progress" role="progressbar" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100" aria-label="Session progress"><span style="width:65%"></span></div>
+          <div class="progress-meta"><span>13 of 20 cards</span><span>65%</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Quiz options</div>
+        <p style="font-weight:800;font-size:19px">Which organelle makes most of a cell’s ATP?</p>
+        <div class="options">
+          <button class="option" aria-pressed="false"><span class="key">1</span>Ribosome</button>
+          <button class="option correct" aria-pressed="false"><span class="key">2</span>Mitochondrion</button>
+          <button class="option wrong" aria-pressed="false"><span class="key">3</span>Golgi apparatus</button>
+          <button class="option" aria-pressed="true"><span class="key">4</span>Lysosome <span class="muted" style="margin-left:auto;font-size:13px">selected</span></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Answer feedback</div>
+        <div class="feedback ok">
+          <h4>Nice work!</h4>
+          <p>Mitochondria run cellular respiration.</p>
+          <button class="btn btn-primary btn-block" style="background:var(--success);border-bottom-color:#58a700">Continue</button>
+        </div>
+        <div class="feedback bad">
+          <h4>Not quite</h4>
+          <p>Correct answer: <b>Mitochondrion</b></p>
+          <button class="btn btn-danger btn-block">Got it</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Flashcard</div>
+        <div class="flashcard" id="flashcard" tabindex="0" role="button" aria-label="Flip flashcard">
+          <div class="term" id="fc-term">Osmosis</div>
+          <div class="def" id="fc-def" hidden>Movement of water across a semipermeable membrane toward higher solute concentration.</div>
+          <div class="flip" id="fc-flip">Tap to flip</div>
+        </div>
+        <div class="row" style="justify-content:space-between">
+          <button class="btn btn-secondary" style="color:var(--danger)">Again</button>
+          <button class="btn btn-secondary">Hard</button>
+          <button class="btn btn-primary">Easy</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Deck card</div>
+        <div class="deck">
+          <div class="deck-top">
+            <div class="deck-icon">Bi</div>
+            <div><div class="deck-title">Cell Biology</div><div class="deck-sub">48 cards · Exam Oct 21</div></div>
+            <span class="pill warn" style="margin-left:auto">12 due</span>
+          </div>
+          <div class="progress"><span style="width:72%"></span></div>
+          <button class="btn btn-primary btn-block">Continue</button>
+        </div>
+        <div class="stat-row">
+          <div class="stat streak"><b>14</b><span>Day streak</span></div>
+          <div class="stat focus"><b>3h 20</b><span>Focus</span></div>
+          <div class="stat cards"><b>312</b><span>Cards</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Side navigation</div>
+        <nav class="nav" aria-label="Main">
+          <a href="#" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Today</a>
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="16" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v14"/></svg>Decks</a>
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>Focus timer</a>
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H8l-4 4z"/></svg>Ask notes</a>
+        </nav>
+      </div>
+
+      <div class="panel">
+        <div class="label">Focus timer</div>
+        <div class="timer">
+          <svg class="ring" viewBox="0 0 140 140" aria-hidden="true">
+            <circle cx="70" cy="70" r="58" fill="none" stroke="var(--border)" stroke-width="14"/>
+            <circle cx="70" cy="70" r="58" fill="none" stroke="var(--primary)" stroke-width="14" stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="127.5" transform="rotate(-90 70 70)"/>
+          </svg>
+          <div class="clock">16:15</div>
+          <div class="hint">Pomodoro 2 of 4 · break in 16 min</div>
+          <div class="row" style="justify-content:center"><button class="btn btn-secondary">Pause</button><button class="btn btn-primary">Finish</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RULES -->
+  <section class="block" id="rules">
+    <div class="section-head"><h2 class="h">Usage rules</h2></div>
+    <div class="rules">
+      <div class="rule do"><b>Brand color is for progress</b><p>Use it on primary CTAs, progress bars, the wordmark and headings. Keep it off body text and small links.</p></div>
+      <div class="rule do"><b>Blue is for links</b><p>Links, secondary buttons, focus rings and the current nav item. Nothing else.</p></div>
+      <div class="rule do"><b>Feedback colors are fixed</b><p>Green means correct and red means incorrect in every brand, so a right answer always looks right.</p></div>
+      <div class="rule dont"><b>No shadows or gradients</b><p>Depth comes from borders and the 4px lip. Surfaces stay flat paper.</p></div>
+      <div class="rule dont"><b>Don't put small white text on brand fills</b><p>White on the brand color is fine at 15px bold caps on buttons. For anything smaller, use Night ink or Charcoal.</p></div>
+      <div class="rule dont"><b>One primary action per view</b><p>A study screen has one obvious next step. Everything else is secondary or ghost.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer class="band">
+  <div class="wrap">
+    <div><div class="mark">bardhie</div><p style="margin-top:8px;font-weight:700">Your study companion.</p></div>
+    <div><h5>Study</h5><ul><li>Today</li><li>Decks</li><li>Focus timer</li></ul></div>
+    <div><h5>Library</h5><ul><li>Notes</li><li>Uploads</li><li>Ask notes</li></ul></div>
+    <div><h5>Account</h5><ul><li>Goals</li><li>Settings</li></ul></div>
+  </div>
+</footer>
+
+<script>
+const root = document.documentElement;
+
+function hexOf(v) {
+  const probe = document.createElement("div");
+  probe.style.color = `var(${v})`;
+  document.body.appendChild(probe);
+  const rgb = getComputedStyle(probe).color;
+  probe.remove();
+  const m = rgb.match(/[\d.]+/g);
+  if (!m || rgb.startsWith("color(")) return rgb;
+  return "#" + m.slice(0, 3).map(n => Math.round(+n).toString(16).padStart(2, "0")).join("");
+}
+
+function renderSwatches() {
+  document.querySelectorAll("[data-swatches]").forEach(el => {
+    el.innerHTML = el.dataset.swatches.split("|").map(s => {
+      const [v, name, role] = s.split(":");
+      return `<button class="swatch" data-hex="${hexOf(v)}"><div class="chip" style="background:var(${v})"></div><div class="meta"><span class="name">${name}</span><span class="var">${v}</span><span class="hex">${hexOf(v)}</span><span class="role">${role}</span></div></button>`;
+    }).join("");
+  });
+}
+
+
+const sl = document.getElementById("space-list");
+sl.innerHTML = [4, 8, 12, 16, 24, 32, 40, 48, 64, 80, 96].map(n => `<div class="space-item"><span>${n}px</span><div class="bar" style="width:${n * 2.4}px"></div></div>`).join("");
+
+const fc = document.getElementById("flashcard");
+const flip = () => {
+  const def = document.getElementById("fc-def");
+  def.hidden = !def.hidden;
+  document.getElementById("fc-flip").textContent = def.hidden ? "Tap to flip" : "Tap to see term";
+};
+fc.addEventListener("click", flip);
+fc.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); } });
+
+document.querySelectorAll(".seg [role=tab]").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".seg [role=tab]").forEach(x => x.setAttribute("aria-selected", String(x === t)));
+}));
+document.querySelectorAll(".option:not(.correct):not(.wrong)").forEach(o => o.addEventListener("click", () => {
+  document.querySelectorAll(".option:not(.correct):not(.wrong)").forEach(x => x.setAttribute("aria-pressed", String(x === o)));
+}));
+document.querySelectorAll(".nav a").forEach(a => a.addEventListener("click", e => {
+  e.preventDefault();
+  document.querySelectorAll(".nav a").forEach(x => x.toggleAttribute("aria-current", x === a));
+  a.setAttribute("aria-current", "page");
+}));
+
+renderSwatches();
+document.addEventListener("click", e => {
+  const sw = e.target.closest(".swatch");
+  if (!sw) return;
+  const hex = sw.querySelector(".hex");
+  navigator.clipboard.writeText(sw.dataset.hex).then(() => {
+    hex.textContent = "Copied " + sw.dataset.hex;
+    setTimeout(() => { hex.textContent = sw.dataset.hex; }, 1200);
+  }).catch(() => getSelection().selectAllChildren(hex));
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderSwatches);
+</script>

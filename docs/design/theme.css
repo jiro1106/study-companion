@@ -1,0 +1,147 @@
+/*
+ * BARDHIE design tokens (Sprout green) for Tailwind CSS v4.
+ * Source of truth for values: docs/design/DESIGN.md.
+ *
+ * Usage, once the renderer exists: move this file to src/renderer/src/theme.css
+ * and import it right after Tailwind in src/renderer/src/index.css:
+ *
+ *   @import "tailwindcss";
+ *   @import "./theme.css";
+ *
+ * That gives utilities such as bg-primary, text-fg-muted, border-border,
+ * rounded-control, font-display and text-label. Dark mode switches the
+ * variables, so the same classes work in both themes.
+ */
+
+:root {
+  /* brand */
+  --primary: #58cc02;
+  --primary-lip: #58a700;
+  --primary-ink: #3f9600;
+  --primary-soft: #a5ed6e;
+  --primary-wash: #d7ffb8;
+  --on-primary: #ffffff;
+
+  /* accents */
+  --link: #1cb0f6;
+  --link-lip: #1899d6;
+  --night: #000437;
+  --streak: #ff9600;
+
+  /* feedback */
+  --success: #58cc02;
+  --success-wash: #d7ffb8;
+  --danger: #ff4b4b;
+  --danger-lip: #ea2b2b;
+  --danger-wash: #ffdfe0;
+  --warning: #ffc800;
+  --warning-wash: #fff5d3;
+
+  /* neutrals */
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f7f7f7;
+  --fg: #4b4b4b;
+  --fg-muted: #777777;
+  --fg-faint: #afafaf;
+  --border: #e5e5e5;
+  --border-strong: #afafaf;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131f24;
+    --surface: #131f24;
+    --surface-2: #1b2b32;
+    --fg: #f1f7fb;
+    --fg-muted: #a3b4bd;
+    --fg-faint: #52656d;
+    --border: #37464f;
+    --border-strong: #52656d;
+    --night: #dfe3ff;
+    --primary-wash: #233a17;
+    --primary-ink: #a5ed6e;
+    --success-wash: #23380f;
+    --danger-wash: #3f1f23;
+    --warning-wash: #3a3112;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #131f24;
+  --surface: #131f24;
+  --surface-2: #1b2b32;
+  --fg: #f1f7fb;
+  --fg-muted: #a3b4bd;
+  --fg-faint: #52656d;
+  --border: #37464f;
+  --border-strong: #52656d;
+  --night: #dfe3ff;
+  --primary-wash: #233a17;
+  --primary-ink: #a5ed6e;
+  --success-wash: #23380f;
+  --danger-wash: #3f1f23;
+  --warning-wash: #3a3112;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-lip: var(--primary-lip);
+  --color-primary-ink: var(--primary-ink);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-wash: var(--primary-wash);
+  --color-on-primary: var(--on-primary);
+
+  --color-link: var(--link);
+  --color-link-lip: var(--link-lip);
+  --color-night: var(--night);
+  --color-streak: var(--streak);
+
+  --color-success: var(--success);
+  --color-success-wash: var(--success-wash);
+  --color-danger: var(--danger);
+  --color-danger-lip: var(--danger-lip);
+  --color-danger-wash: var(--danger-wash);
+  --color-warning: var(--warning);
+  --color-warning-wash: var(--warning-wash);
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+}
+
+@theme {
+  /* Fonts load from Google Fonts: Nunito 800/900, Nunito Sans 500/700/800. */
+  --font-display: "Nunito", ui-rounded, system-ui, sans-serif;
+  --font-body: "Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --text-caption: 13px;
+  --text-caption--line-height: 1.23;
+  --text-label: 15px;
+  --text-label--line-height: 1.33;
+  --text-label--letter-spacing: 0.053em;
+  --text-body: 17px;
+  --text-body--line-height: 1.4;
+  --text-sub: 19px;
+  --text-sub--line-height: 1.4;
+  --text-heading-sm: 32px;
+  --text-heading-sm--line-height: 1.2;
+  --text-heading: 48px;
+  --text-heading--line-height: 1.2;
+  --text-heading--letter-spacing: -0.02em;
+  --text-display: 64px;
+  --text-display--line-height: 1.2;
+  --text-display--letter-spacing: -0.02em;
+
+  --radius-control: 12px;
+  --radius-card: 16px;
+
+  /* Spacing: Tailwind's default 4px step (--spacing: 0.25rem) already matches. */
+}
