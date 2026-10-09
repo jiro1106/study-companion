@@ -4,6 +4,7 @@
   "private": true,
   "main": "out/main/index.js",
   "scripts": {
+    "predev": "install-electron",
     "dev": "electron-vite dev",
     "test": "node --test tests/window-options.test.ts",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
